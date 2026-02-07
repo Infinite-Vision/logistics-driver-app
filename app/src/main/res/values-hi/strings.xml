@@ -1,0 +1,81 @@
+<resources>
+    <!-- App Name -->
+    <string name="app_name">Partner Onboarding</string>
+    
+    <!-- Common -->
+    <string name="continue_btn">जारी रखें</string>
+    <string name="submit">जमा करें</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="save">सहेजें</string>
+    <string name="edit">संपादित करें</string>
+    <string name="delete">हटाएं</string>
+    <string name="back">वापस</string>
+    <string name="change">बदलें</string>
+    <string name="resend">पुनः भेजें</string>
+    <string name="india">भारत</string>
+    <string name="change_region">क्षेत्र बदलें</string>
+    
+    <!-- Language Selection -->
+    <string name="select_language">अपनी पसंदीदा भाषा चुनें</string>
+    <string name="lang_english">English</string>
+    <string name="lang_english_native">English</string>
+    <string name="lang_hindi">Hindi</string>
+    <string name="lang_hindi_native">हिंदी</string>
+    <string name="lang_tamil">Tamil</string>
+    <string name="lang_tamil_native">தமிழ்</string>
+    <string name="lang_telugu">Telugu</string>
+    <string name="lang_telugu_native">తెలుగు</string>
+    <string name="lang_kannada">Kannada</string>
+    <string name="lang_kannada_native">ಕನ್ನಡ</string>
+    <string name="lang_marathi">Marathi</string>
+    <string name="lang_marathi_native">मराठी</string>
+    
+    <!-- Phone Entry -->
+    <string name="enter_phone_title">अपना मोबाइल नंबर दर्ज करें</string>
+    <string name="phone_hint">मोबाइल नंबर</string>
+    <string name="phone_country_code">+91</string>
+    <string name="we_will_send_otp">हम आपको 4 अंकों का सत्यापन कोड भेजेंगे</string>
+    <string name="send_otp">OTP भेजें</string>
+    
+    <!-- OTP Verification -->
+    <string name="verify_number_title">अपना नंबर सत्यापित करें</string>
+    <string name="enter_otp_sent_to">4-अंकीय कोड दर्ज करें जो भेजा गया है</string>
+    <string name="otp_hint">OTP दर्ज करें</string>
+    <string name="resend_code">%s में कोड फिर से भेजें</string>
+    <string name="resend_otp">OTP फिर से भेजें</string>
+    <string name="verify">सत्यापित करें</string>
+    <string name="otp_sent_success">OTP सफलतापूर्वक भेजा गया</string>
+    <string name="otp_verified_success">OTP सफलतापूर्वक सत्यापित किया गया</string>
+    
+    <!-- Driver Details -->
+    <string name="driver_details_title">ड्राइवर विवरण</string>
+    <string name="personal_info">व्यक्तिगत जानकारी</string>
+    <string name="vehicle_info">वाहन की जानकारी</string>
+    <string name="name_hint">पूरा नाम</string>
+    <string name="email_hint">ईमेल पता</string>
+    <string name="address_hint">पता</string>
+    <string name="city_hint">शहर</string>
+    <string name="state_hint">राज्य</string>
+    <string name="pincode_hint">पिनकोड</string>
+    <string name="vehicle_number_hint">वाहन नंबर</string>
+    <string name="vehicle_type_hint">वाहन का प्रकार</string>
+    <string name="license_number_hint">लाइसेंस नंबर</string>
+    <string name="profile_saved_success">प्रोफ़ाइल सफलतापूर्वक सहेजी गई</string>
+    
+    <!-- Error Messages -->
+    <string name="error_invalid_phone">कृपया 10 अंकों का मान्य फ़ोन नंबर दर्ज करें</string>
+    <string name="error_invalid_otp">कृपया 4 अंकों का मान्य OTP दर्ज करें</string>
+    <string name="error_otp_mismatch">अमान्य OTP। कृपया पुनः प्रयास करें</string>
+    <string name="error_invalid_name">कृपया एक मान्य नाम दर्ज करें</string>
+    <string name="error_invalid_email">कृपया एक मान्य ईमेल पता दर्ज करें</string>
+    <string name="error_invalid_vehicle_number">कृपया एक मान्य वाहन नंबर दर्ज करें</string>
+    <string name="error_invalid_pincode">कृपया 6 अंकों का मान्य पिनकोड दर्ज करें</string>
+    <string name="error_required_field">यह फ़ील्ड आवश्यक है</string>
+    <string name="error_network">नेटवर्क त्रुटि। कृपया पुनः प्रयास करें</string>
+    <string name="error_something_wrong">कुछ गलत हो गया। कृपया पुनः प्रयास करें</string>
+    <string name="please_select_language">कृपया एक भाषा चुनें</string>
+    
+    <!-- Success Messages -->
+    <string name="success_data_saved">डेटा सफलतापूर्वक सहेजा गया</string>
+    <string name="success_profile_updated">प्रोफ़ाइल सफलतापूर्वक अपडेट की गई</string>
+</resources>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/auth_navigation"
+    app:startDestination="@id/languageSelectionFragment">
+
+    <!-- Language Selection Fragment -->
+    <fragment
+        android:id="@+id/languageSelectionFragment"
+        android:name="com.example.logistics_driver_app.ui.auth.language.LanguageSelectionFragment"
+        android:label="@string/select_language"
+        tools:layout="@layout/fragment_language_selection">
+        
+        <action
+            android:id="@+id/action_languageSelection_to_phoneEntry"
+            app:destination="@id/phoneEntryFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <!-- Phone Entry Fragment -->
+    <fragment
+        android:id="@+id/phoneEntryFragment"
+        android:name="com.example.logistics_driver_app.ui.auth.phone.PhoneEntryFragment"
+        android:label="@string/enter_phone_title"
+        tools:layout="@layout/fragment_phone_entry">
+        
+        <action
+            android:id="@+id/action_phoneEntry_to_otpVerification"
+            app:destination="@id/otpVerificationFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <!-- OTP Verification Fragment -->
+    <fragment
+        android:id="@+id/otpVerificationFragment"
+        android:name="com.example.logistics_driver_app.ui.auth.otp.OTPVerificationFragment"
+        android:label="@string/verify_number_title"
+        tools:layout="@layout/fragment_otp_verification">
+        
+        <argument
+            android:name="phoneNumber"
+            app:argType="string"
+            android:defaultValue="" />
+        
+        <argument
+            android:name="otp"
+            app:argType="string"
+            android:defaultValue="" />
+        
+        <action
+            android:id="@+id/action_otpVerification_to_driverDetails"
+            app:destination="@id/driverDetailsFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right"
+            app:popUpTo="@id/languageSelectionFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Driver Details Fragment -->
+    <fragment
+        android:id="@+id/driverDetailsFragment"
+        android:name="com.example.logistics_driver_app.ui.driver.DriverDetailsFragment"
+        android:label="@string/driver_details_title"
+        tools:layout="@layout/fragment_driver_details" />
+
+</navigation>
