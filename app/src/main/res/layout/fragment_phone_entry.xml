@@ -9,11 +9,12 @@
     <!-- Back Button -->
     <ImageButton
         android:id="@+id/btnBack"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/back"
-        android:src="@android:drawable/ic_menu_revert"
+        android:src="@drawable/ic_arrow_back"
+        android:padding="8dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:tint="@color/text_primary" />
@@ -21,13 +22,13 @@
     <!-- Icon -->
     <ImageView
         android:id="@+id/ivIcon"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/ic_launcher_background"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/bg_icon_light_green"
         android:contentDescription="@string/app_name"
-        android:padding="12dp"
-        android:src="@drawable/ic_launcher_foreground"
+        android:padding="20dp"
+        android:src="@drawable/ic_phone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
@@ -36,10 +37,10 @@
         android:id="@+id/tvTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="20dp"
         android:text="@string/enter_phone_title"
         android:textColor="@color/text_primary"
-        android:textSize="24sp"
+        android:textSize="26sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -58,61 +59,74 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvTitle" />
 
+    <!-- Mobile Number Label -->
+    <TextView
+        android:id="@+id/tvMobileLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="@string/mobile_number_label"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
+
     <!-- Phone Input Container -->
     <LinearLayout
         android:id="@+id/llPhoneInput"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="8dp"
         android:orientation="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+        app:layout_constraintTop_toBottomOf="@id/tvMobileLabel">
 
         <!-- Country Code -->
-        <com.google.android.material.textfield.TextInputLayout
+        <LinearLayout
             android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp">
+            android:layout_height="56dp"
+            android:layout_marginEnd="12dp"
+            android:background="@drawable/bg_edit_text"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etCountryCode"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/tvCountryFlag"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:enabled="false"
-                android:gravity="center"
+                android:text="🇮🇳"
+                android:textSize="20sp"
+                android:layout_marginEnd="4dp" />
+
+            <TextView
+                android:id="@+id/tvCountryCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="@string/phone_country_code"
                 android:textColor="@color/text_primary"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:textStyle="bold" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+        </LinearLayout>
 
         <!-- Phone Number -->
-        <com.google.android.material.textfield.TextInputLayout
+        <EditText
+            android:id="@+id/etPhoneNumber"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:layout_weight="1"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:errorEnabled="true">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etPhoneNumber"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="@string/phone_hint"
-                android:inputType="phone"
-                android:maxLength="10"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp" />
-
-        </com.google.android.material.textfield.TextInputLayout>
+            android:background="@drawable/bg_edit_text"
+            android:hint="@string/phone_hint"
+            android:inputType="phone"
+            android:maxLength="10"
+            android:paddingHorizontal="16dp"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_hint"
+            android:textSize="16sp" />
 
     </LinearLayout>
 
@@ -121,14 +135,44 @@
         android:id="@+id/btnSendOTP"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
         android:backgroundTint="@color/button_primary"
         android:text="@string/send_otp"
         android:textColor="@color/button_text"
         android:textSize="16sp"
-        app:cornerRadius="12dp"
+        android:textAllCaps="false"
+        app:cornerRadius="28dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/llPhoneInput" />
+
+    <!-- Legal Text -->
+    <TextView
+        android:id="@+id/tvLegalText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:textColor="@color/text_secondary"
+        android:textSize="12sp"
+        android:lineSpacingExtra="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnSendOTP" />
+
+    <!-- Help Text -->
+    <TextView
+        android:id="@+id/tvHelp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:text="@string/need_help"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

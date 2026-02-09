@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.ksp)
+    id("androidx.navigation.safeargs.kotlin")
 }
 
 android {
@@ -69,6 +70,10 @@ dependencies {
     
     // Gson
     implementation(libs.gson)
+
+    // Play Services
+    implementation(libs.play.services.auth)
+    implementation(libs.play.services.auth.api.phone)
     
     androidTestImplementation(libs.androidx.espresso.core)
 }

@@ -8,15 +8,15 @@
     <!-- Language Selection Fragment -->
     <fragment
         android:id="@+id/languageSelectionFragment"
-        android:name="com.example.logistics_driver_app.ui.auth.language.LanguageSelectionFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.LanguageSelectionFragment"
         android:label="@string/select_language"
         tools:layout="@layout/fragment_language_selection">
         
         <action
-            android:id="@+id/action_languageSelection_to_phoneEntry"
+            android:id="@+id/action_languageSelectionFragment_to_phoneEntryFragment"
             app:destination="@id/phoneEntryFragment"
-            app:enterAnim="@android:anim/slide_in_left"
-            app:exitAnim="@android:anim/slide_out_right"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
@@ -24,15 +24,15 @@
     <!-- Phone Entry Fragment -->
     <fragment
         android:id="@+id/phoneEntryFragment"
-        android:name="com.example.logistics_driver_app.ui.auth.phone.PhoneEntryFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.PhoneEntryFragment"
         android:label="@string/enter_phone_title"
         tools:layout="@layout/fragment_phone_entry">
         
         <action
             android:id="@+id/action_phoneEntry_to_otpVerification"
             app:destination="@id/otpVerificationFragment"
-            app:enterAnim="@android:anim/slide_in_left"
-            app:exitAnim="@android:anim/slide_out_right"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
     </fragment>
@@ -40,7 +40,7 @@
     <!-- OTP Verification Fragment -->
     <fragment
         android:id="@+id/otpVerificationFragment"
-        android:name="com.example.logistics_driver_app.ui.auth.otp.OTPVerificationFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.OTPVerificationFragment"
         android:label="@string/verify_number_title"
         tools:layout="@layout/fragment_otp_verification">
         
@@ -57,8 +57,8 @@
         <action
             android:id="@+id/action_otpVerification_to_driverDetails"
             app:destination="@id/driverDetailsFragment"
-            app:enterAnim="@android:anim/slide_in_left"
-            app:exitAnim="@android:anim/slide_out_right"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right"
             app:popUpTo="@id/languageSelectionFragment"
@@ -68,8 +68,12 @@
     <!-- Driver Details Fragment -->
     <fragment
         android:id="@+id/driverDetailsFragment"
-        android:name="com.example.logistics_driver_app.ui.driver.DriverDetailsFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.DriverDetailsFragment"
         android:label="@string/driver_details_title"
-        tools:layout="@layout/fragment_driver_details" />
+        tools:layout="@layout/fragment_driver_details" >
+        <argument
+            android:name="phoneNumber"
+            app:argType="string" />
+    </fragment>
 
 </navigation>

@@ -1,13 +1,14 @@
 package com.example.logistics_driver_app.data.model
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /**
- * Driver entity representing driver details in the database.
- * Stores all information related to a driver in the logistics system.
+ * Driver model - Common entity class for driver information.
+ * Used across the application for driver data representation.
  */
-@Entity(tableName = "drivers")
+@Entity(tableName = "drivers", indices = [Index(value = ["phoneNumber"], unique = true)])
 data class Driver(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
