@@ -155,11 +155,39 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
         }.start()
     }
     
+    private fun showSuccessScreen() {
+        binding.apply {
+            // Hide main content
+            clMainContent.visibility = View.GONE
+            
+            // Show success overlay
+            clSuccessOverlay.visibility = View.VISIBLE
+            
+            // Set phone number in success screen
+            val maskedNumber = CommonFunctions.maskPhoneNumber(args.phoneNumber)
+            tvSuccessPhoneNumber.text = maskedNumber
+        }
+    }
+    
     private fun observeViewModel() {
         viewModel.verificationSuccess.observe(viewLifecycleOwner, Observer { success ->
             if (success) {
-                Bakery.showToast(requireContext(), getString(R.string.otp_verified_success))
-                // Navigation handled by onboardingStatus observer
+                // Show success overlay for 3 seconds
+                showSuccessScreen()
+                
+                // Wait 3 seconds then proceed
+                binding.root.postDelayed({
+                    // Navigation handled by onboardingStatus observer
+                    viewModel.onboardingStatus.value?.let { status ->
+                        if (status == "IN_PROGRESS") {
+                            viewModel.onboardingStep.value?.let { step ->
+                                navigateBasedOnStep(step)
+                            }
+                        } else if (status == "COMPLETED") {
+                            navigateToDriverDetails()
+                        }
+                    }
+                }, 3000) // 3 seconds delay
             }
         })
         
@@ -215,26 +243,26 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
     private fun navigateBasedOnStep(step: String) {
         when (step) {
             "OWNER" -> navigateToOwnerDetails()
-            "VEHICLE" -> {
-                // TODO: Navigate to vehicle details when implemented
-                navigateToDriverDetails() // For now
-            }
-            "DRIVER" -> {
-                // TODO: Navigate to driver details when implemented
-                navigateToDriverDetails()
-            }
-            else -> navigateToDriverDetails()
+            "VEHICLE" -> navigateToVehicleDetails()
+            "DRIVER" -> navigateToDriverDetails()
+            else -> navigateToOwnerDetails()
         }
     }
     
     private fun navigateToOwnerDetails() {
-        // TODO: Create owner details navigation action
-        navigateToDriverDetails() // For now using driver details
+        val action = OTPVerificationFragmentDirections
+            .actionOtpVerificationToOwnerDetails()
+        findNavController().navigate(action)
+    }
+    
+    private fun navigateToVehicleDetails() {
+        // TODO: Navigate once VehicleDetails action is created
+        navigateToOwnerDetails() // Fallback for now
     }
     
     private fun navigateToDriverDetails() {
         val action = OTPVerificationFragmentDirections
-            .actionOtpVerificationToDriverDetails(args.phoneNumber)
+            .actionOtpVerificationToOwnerDetails()  // Updated to go to Owner Details first
         findNavController().navigate(action)
     }
     

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background"
+    android:padding="32dp">
+
+    <!-- Icon Container -->
+    <View
+        android:id="@+id/vIconBackground"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="80dp"
+        android:background="@drawable/bg_icon_verification"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/ivClock"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:contentDescription="Verification"
+        android:src="@drawable/ic_clock"
+        app:tint="@color/primary"
+        app:layout_constraintBottom_toBottomOf="@id/vIconBackground"
+        app:layout_constraintEnd_toEndOf="@id/vIconBackground"
+        app:layout_constraintStart_toStartOf="@id/vIconBackground"
+        app:layout_constraintTop_toTopOf="@id/vIconBackground" />
+
+    <!-- Badge Icon -->
+    <View
+        android:id="@+id/vBadge"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginEnd="-8dp"
+        android:layout_marginBottom="-8dp"
+        android:background="@drawable/bg_circle_orange"
+        app:layout_constraintBottom_toBottomOf="@id/vIconBackground"
+        app:layout_constraintEnd_toEndOf="@id/vIconBackground" />
+
+    <ImageView
+        android:id="@+id/ivCheckBadge"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:contentDescription="Check"
+        android:src="@drawable/ic_checkmark"
+        app:tint="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="@id/vBadge"
+        app:layout_constraintEnd_toEndOf="@id/vBadge"
+        app:layout_constraintStart_toStartOf="@id/vBadge"
+        app:layout_constraintTop_toTopOf="@id/vBadge" />
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="Verification in Progress"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/vIconBackground" />
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/tvSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="We're reviewing your documents and profile. This usually takes "
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+    <TextView
+        android:id="@+id/tvDuration"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="24-48 hours"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvSubtitle" />
+
+    <TextView
+        android:id="@+id/tvDot"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="."
+        android:textColor="@color/text_secondary"
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvDuration" />
+
+    <!-- What's Next Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardWhatsNext"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvDot">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="What's next?"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Step 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/bg_number_circle" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Our team will verify your documents"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- Step 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/bg_number_circle" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="You'll receive a notification once approved"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- Step 3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_marginEnd="16dp"
+                    android:background="@drawable/bg_number_circle" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Start accepting orders and earn!"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Contact Support Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnContactSupport"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="24dp"
+        android:text="Contact Support"
+        android:textColor="@color/text_primary"
+        android:textSize="16sp"
+        app:cornerRadius="12dp"
+        app:icon="@drawable/ic_phone"
+        app:iconGravity="textStart"
+        app:iconTint="@color/text_primary"
+        app:strokeColor="@color/border_light"
+        app:strokeWidth="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cardWhatsNext" />
+
+    <!-- Skip to Home (Demo) -->
+    <TextView
+        android:id="@+id/tvSkipDemo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="(Demo: Skip to Home Screen)"
+        android:textColor="@color/text_hint"
+        android:textSize="12sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnContactSupport" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

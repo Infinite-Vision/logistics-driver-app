@@ -55,6 +55,16 @@
             android:defaultValue="" />
         
         <action
+            android:id="@+id/action_otpVerification_to_ownerDetails"
+            app:destination="@id/ownerDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right"
+            app:popUpTo="@id/languageSelectionFragment"
+            app:popUpToInclusive="true" />
+        
+        <action
             android:id="@+id/action_otpVerification_to_driverDetails"
             app:destination="@id/driverDetailsFragment"
             app:enterAnim="@anim/slide_in_right"
@@ -65,15 +75,61 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- Driver Details Fragment -->
+    <!-- Owner Details Fragment (Step 1) -->
+    <fragment
+        android:id="@+id/ownerDetailsFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.OwnerDetailsFragment"
+        android:label="Owner Details"
+        tools:layout="@layout/fragment_owner_details">
+        
+        <action
+            android:id="@+id/action_ownerDetails_to_vehicleDetails"
+            app:destination="@id/vehicleDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <!-- Vehicle Details Fragment (Step 2) -->
+    <fragment
+        android:id="@+id/vehicleDetailsFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.VehicleDetailsFragment"
+        android:label="Vehicle Details"
+        tools:layout="@layout/fragment_vehicle_details">
+        
+        <action
+            android:id="@+id/action_vehicleDetails_to_driverDetails"
+            app:destination="@id/driverDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+    </fragment>
+
+    <!-- Driver Details Fragment (Step 3) -->
     <fragment
         android:id="@+id/driverDetailsFragment"
         android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.DriverDetailsFragment"
         android:label="@string/driver_details_title"
-        tools:layout="@layout/fragment_driver_details" >
-        <argument
-            android:name="phoneNumber"
-            app:argType="string" />
+        tools:layout="@layout/fragment_driver_details_new" >
+        
+        <action
+            android:id="@+id/action_driverDetails_to_verificationProgress"
+            app:destination="@id/verificationProgressFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right"
+            app:popUpTo="@id/ownerDetailsFragment"
+            app:popUpToInclusive="true" />
     </fragment>
+
+    <!-- Verification Progress Fragment -->
+    <fragment
+        android:id="@+id/verificationProgressFragment"
+        android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.VerificationProgressFragment"
+        android:label="Verification in Progress"
+        tools:layout="@layout/fragment_verification_progress" />
 
 </navigation>

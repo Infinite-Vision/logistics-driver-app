@@ -26,6 +26,25 @@ class SharedPreference private constructor(context: Context) {
         private const val KEY_DRIVER_NAME = "driver_name"
         private const val KEY_DRIVER_ID = "driver_id"
         
+        // Owner details keys
+        private const val KEY_OWNER_NAME = "owner_name"
+        private const val KEY_OWNER_AADHAAR_URI = "owner_aadhaar_uri"
+        private const val KEY_OWNER_PAN_URI = "owner_pan_uri"
+        private const val KEY_OWNER_SELFIE_URI = "owner_selfie_uri"
+        
+        // Vehicle details keys
+        private const val KEY_VEHICLE_NUMBER = "vehicle_number"
+        private const val KEY_VEHICLE_RC_URI = "vehicle_rc_uri"
+        private const val KEY_VEHICLE_CITY = "vehicle_city"
+        private const val KEY_VEHICLE_TYPE = "vehicle_type"
+        private const val KEY_BODY_TYPE = "body_type"
+        private const val KEY_BODY_CAPACITY = "body_capacity"
+        
+        // Driver details keys
+        private const val KEY_WILL_DRIVE = "will_drive"
+        private const val KEY_DRIVER_PHONE = "driver_phone"
+        private const val KEY_LICENSE_URI = "license_uri"
+        
         @Volatile
         private var INSTANCE: SharedPreference? = null
         
@@ -141,6 +160,48 @@ class SharedPreference private constructor(context: Context) {
     
     fun setDriverId(id: Int) = putInt(KEY_DRIVER_ID, id)
     fun getDriverId() = getInt(KEY_DRIVER_ID)
+    
+    // Owner details
+    fun saveOwnerName(name: String) = putString(KEY_OWNER_NAME, name)
+    fun getOwnerName() = getString(KEY_OWNER_NAME)
+    
+    fun saveOwnerAadhaarUri(uri: String) = putString(KEY_OWNER_AADHAAR_URI, uri)
+    fun getOwnerAadhaarUri() = getString(KEY_OWNER_AADHAAR_URI)
+    
+    fun saveOwnerPANUri(uri: String) = putString(KEY_OWNER_PAN_URI, uri)
+    fun getOwnerPANUri() = getString(KEY_OWNER_PAN_URI)
+    
+    fun saveOwnerSelfieUri(uri: String) = putString(KEY_OWNER_SELFIE_URI, uri)
+    fun getOwnerSelfieUri() = getString(KEY_OWNER_SELFIE_URI)
+    
+    // Vehicle details
+    fun saveVehicleNumber(number: String) = putString(KEY_VEHICLE_NUMBER, number)
+    fun getVehicleNumber() = getString(KEY_VEHICLE_NUMBER)
+    
+    fun saveVehicleRCUri(uri: String) = putString(KEY_VEHICLE_RC_URI, uri)
+    fun getVehicleRCUri() = getString(KEY_VEHICLE_RC_URI)
+    
+    fun saveVehicleCity(city: String) = putString(KEY_VEHICLE_CITY, city)
+    fun getVehicleCity() = getString(KEY_VEHICLE_CITY)
+    
+    fun saveVehicleType(type: String) = putString(KEY_VEHICLE_TYPE, type)
+    fun getVehicleType() = getString(KEY_VEHICLE_TYPE)
+    
+    fun saveBodyType(type: String) = putString(KEY_BODY_TYPE, type)
+    fun getBodyType() = getString(KEY_BODY_TYPE)
+    
+    fun saveBodyCapacity(capacity: String) = putString(KEY_BODY_CAPACITY, capacity)
+    fun getBodyCapacity() = getString(KEY_BODY_CAPACITY)
+    
+    // Driver details
+    fun saveWillDrive(willDrive: Boolean) = putBoolean(KEY_WILL_DRIVE, willDrive)
+    fun getWillDrive() = getBoolean(KEY_WILL_DRIVE)
+    
+    fun saveDriverPhone(phone: String) = putString(KEY_DRIVER_PHONE, phone)
+    fun getDriverPhone() = getString(KEY_DRIVER_PHONE)
+    
+    fun saveLicenseUri(uri: String) = putString(KEY_LICENSE_URI, uri)
+    fun getLicenseUri() = getString(KEY_LICENSE_URI)
     
     /**
      * Clear all preferences.
