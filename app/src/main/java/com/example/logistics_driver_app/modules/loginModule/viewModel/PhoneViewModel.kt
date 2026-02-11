@@ -23,9 +23,12 @@ class PhoneViewModel(application: Application) : BaseViewModel(application) {
     private val _errorMessage = MutableLiveData<String>()
     val errorMessage: LiveData<String> = _errorMessage
     
-    private val apiService = RetrofitClient.getRetrofitInstance().create(
-        com.example.logistics_driver_app.data.NetworkCall.ApiService::class.java
-    )
+    init {
+        // Initialize RetrofitClient with context
+        RetrofitClient.initialize(application)
+    }
+    
+    private val apiService = RetrofitClient.getApiService()
     
     /**
      * Send OTP to phone number.
@@ -39,28 +42,37 @@ class PhoneViewModel(application: Application) : BaseViewModel(application) {
                 _error.value = null
                 _errorMessage.value = null
                 
+                android.util.Log.d("PhoneViewModel", "Requesting OTP for: $countryCode$phoneNumber")
+                
                 // Make actual API call
                 val request = OTPRequest(countryCode, phoneNumber)
                 val response = apiService.requestOTP(request)
                 
+                android.util.Log.d("PhoneViewModel", "Response received: ${response.code()}, Body: ${response.body()}")
+                
                 if (response.isSuccessful && response.body()?.success == true) {
                     _otpSent.value = true
                 } else {
-                    _errorMessage.value = response.body()?.data?.message ?: "Failed to send OTP"
+                    _errorMessage.value = response.body()?.message 
+                        ?: response.body()?.data?.message 
+                        ?: "Failed to send OTP"
                     _otpSent.value = false
                 }
                 
             } catch (e: HttpException) {
+                android.util.Log.e("PhoneViewModel", "HTTP Error: ${e.code()}, ${e.message()}", e)
                 when (e.code()) {
                     429 -> _errorMessage.value = "You are sending requests too quickly. Please wait a moment."
                     500 -> _errorMessage.value = "Service temporarily unavailable. Please try again later."
-                    else -> _errorMessage.value = "Error: ${e.message()}"
+                    else -> _errorMessage.value = "Error ${e.code()}: ${e.message()}"
                 }
                 _otpSent.value = false
             } catch (e: IOException) {
-                _errorMessage.value = "Network error. Please check your connection."
+                android.util.Log.e("PhoneViewModel", "Network Error: ${e.message}", e)
+                _errorMessage.value = "Network error: ${e.message ?: "Cannot connect to server. Please check your internet connection."}"
                 _otpSent.value = false
             } catch (e: Exception) {
+                android.util.Log.e("PhoneViewModel", "Unexpected Error: ${e.message}", e)
                 handleException(e)
                 _errorMessage.value = e.message ?: "An unexpected error occurred"
                 _otpSent.value = false

@@ -71,6 +71,10 @@ dependencies {
     // Gson
     implementation(libs.gson)
 
+    // AWS S3
+    implementation("com.amazonaws:aws-android-sdk-s3:2.77.0")
+    implementation("com.amazonaws:aws-android-sdk-core:2.77.0")
+
     // Play Services
     implementation(libs.play.services.auth)
     implementation(libs.play.services.auth.api.phone)

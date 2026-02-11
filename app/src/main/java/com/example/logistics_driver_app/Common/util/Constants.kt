@@ -7,7 +7,7 @@ package com.example.logistics_driver_app.Common.util
 object Constants {
     
     // API Configuration
-    const val BASE_URL = "https://hyperactively-florescent-addilyn.ngrok-free.dev/api/v1/"
+    const val BASE_URL = "http://43.205.235.73:8080/api/v1/"
     const val API_TIMEOUT = 30L // seconds
     
     // API Endpoints

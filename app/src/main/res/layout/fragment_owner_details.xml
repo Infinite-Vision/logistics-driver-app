@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:background="@color/background">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Fixed Header -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="24dp">
+        android:background="@color/background"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="16dp">
 
         <!-- Back Button -->
         <ImageButton
@@ -40,7 +51,6 @@
             app:layout_constraintTop_toTopOf="@id/btnBack"
             app:layout_constraintBottom_toBottomOf="@id/btnBack" />
 
-        <!-- Help Icon -->
         <ImageView
             android:id="@+id/ivHelp"
             android:layout_width="24dp"
@@ -53,167 +63,67 @@
             app:tint="@color/text_secondary" />
 
         <!-- Progress Steps -->
-        <LinearLayout
-            android:id="@+id/llProgressSteps"
+        <include
+            android:id="@+id/includeSteps"
+            layout="@layout/include_progress_steps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="32dp"
-            android:orientation="horizontal"
-            android:gravity="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/btnBack">
+            app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
-            <!-- Step 1 - Owner -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:layout_marginEnd="24dp">
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <FrameLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp">
+    </com.google.android.material.appbar.AppBarLayout>
 
-                    <View
-                        android:id="@+id/vStep1"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_circle_primary" />
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-                    <TextView
-                        android:id="@+id/tvStep1"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="1"
-                        android:textColor="@android:color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Owner"
-                    android:textColor="@color/text_primary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Step 2 - Vehicle -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center"
-                android:layout_marginEnd="24dp">
-
-                <FrameLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp">
-
-                    <View
-                        android:id="@+id/vStep2"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_step_inactive" />
-
-                    <TextView
-                        android:id="@+id/tvStep2"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="2"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Vehicle"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- Step 3 - Driver -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:gravity="center">
-
-                <FrameLayout
-                    android:layout_width="40dp"
-                    android:layout_height="40dp">
-
-                    <View
-                        android:id="@+id/vStep3"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@drawable/bg_step_inactive" />
-
-                    <TextView
-                        android:id="@+id/tvStep3"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:text="3"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="Driver"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-        </LinearLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="100dp">
 
         <!-- Name Label -->
         <TextView
             android:id="@+id/tvNameLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
             android:text="Name"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/llProgressSteps" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvNameRequired"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
             android:text="*"
             android:textColor="@color/error"
-            android:textSize="14sp"
+            android:textSize="16sp"
             app:layout_constraintStart_toEndOf="@id/tvNameLabel"
             app:layout_constraintTop_toTopOf="@id/tvNameLabel" />
 
         <!-- Name Input -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilName"
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardName"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            app:boxBackgroundColor="@android:color/white"
-            app:boxBackgroundMode="filled"
-            app:boxCornerRadiusBottomEnd="12dp"
-            app:boxCornerRadiusBottomStart="12dp"
-            app:boxCornerRadiusTopEnd="12dp"
-            app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeWidth="0dp"
+            app:cardBackgroundColor="@color/background_light"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvNameLabel">
@@ -221,14 +131,17 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etName"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="56dp"
+                android:background="@android:color/transparent"
                 android:hint="Name"
                 android:inputType="textPersonName"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
 
-        </com.google.android.material.textfield.TextInputLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Upload Section Label -->
         <TextView
@@ -238,17 +151,18 @@
             android:layout_marginTop="24dp"
             android:text="Upload the following"
             android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilName" />
+            app:layout_constraintTop_toBottomOf="@id/cardName" />
 
         <TextView
             android:id="@+id/tvUploadRequired"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
             android:text="*"
             android:textColor="@color/error"
-            android:textSize="14sp"
+            android:textSize="16sp"
             app:layout_constraintStart_toEndOf="@id/tvUploadLabel"
             app:layout_constraintTop_toTopOf="@id/tvUploadLabel" />
 
@@ -270,40 +184,69 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tvAadhaarLabel"
+                <LinearLayout
+                    android:id="@+id/llAadhaarLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Owner Aadhaar Card"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:orientation="horizontal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btnUploadAadhaar" />
+                    app:layout_constraintEnd_toStartOf="@id/btnUploadAadhaar"
+                    app:layout_constraintBottom_toTopOf="@id/ivAadhaarPreview"
+                    app:layout_constraintVertical_bias="0">
+
+                    <TextView
+                        android:id="@+id/tvAadhaarLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Owner Aadhaar Card"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:text="*"
+                        android:textColor="@color/error"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivAadhaarPreview"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_image_preview"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/llAadhaarLabel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="Aadhaar Preview" />
 
                 <TextView
-                    android:id="@+id/tvAadhaarRequired"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="*"
-                    android:textColor="@color/error"
-                    android:textSize="16sp"
-                    app:layout_constraintStart_toEndOf="@id/tvAadhaarLabel"
-                    app:layout_constraintTop_toTopOf="@id/tvAadhaarLabel" />
-
-                <Button
                     android:id="@+id/btnUploadAadhaar"
-                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upload"
                     android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:drawableStart="@drawable/ic_upload"
+                    android:drawablePadding="8dp"
                     android:drawableTint="@color/primary"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -327,40 +270,69 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tvPANLabel"
+                <LinearLayout
+                    android:id="@+id/llPANLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Owner PAN Card"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:orientation="horizontal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btnUploadPAN" />
+                    app:layout_constraintEnd_toStartOf="@id/btnUploadPAN"
+                    app:layout_constraintBottom_toTopOf="@id/ivPANPreview"
+                    app:layout_constraintVertical_bias="0">
+
+                    <TextView
+                        android:id="@+id/tvPANLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Owner PAN Card"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:text="*"
+                        android:textColor="@color/error"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivPANPreview"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_image_preview"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/llPANLabel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="PAN Preview" />
 
                 <TextView
-                    android:id="@+id/tvPANRequired"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="*"
-                    android:textColor="@color/error"
-                    android:textSize="16sp"
-                    app:layout_constraintStart_toEndOf="@id/tvPANLabel"
-                    app:layout_constraintTop_toTopOf="@id/tvPANLabel" />
-
-                <Button
                     android:id="@+id/btnUploadPAN"
-                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upload"
                     android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:drawableStart="@drawable/ic_upload"
+                    android:drawablePadding="8dp"
                     android:drawableTint="@color/primary"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -384,60 +356,112 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tvSelfieLabel"
+                <LinearLayout
+                    android:id="@+id/llSelfieLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Owner Selfie"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:orientation="horizontal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btnUploadSelfie" />
+                    app:layout_constraintEnd_toStartOf="@id/btnUploadSelfie"
+                    app:layout_constraintBottom_toTopOf="@id/ivSelfiePreview"
+                    app:layout_constraintVertical_bias="0">
+
+                    <TextView
+                        android:id="@+id/tvSelfieLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Owner Selfie"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:text="*"
+                        android:textColor="@color/error"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivSelfiePreview"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_image_preview"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/llSelfieLabel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="Selfie Preview" />
 
                 <TextView
-                    android:id="@+id/tvSelfieRequired"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="*"
-                    android:textColor="@color/error"
-                    android:textSize="16sp"
-                    app:layout_constraintStart_toEndOf="@id/tvSelfieLabel"
-                    app:layout_constraintTop_toTopOf="@id/tvSelfieLabel" />
-
-                <Button
                     android:id="@+id/btnUploadSelfie"
-                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upload"
                     android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:drawableStart="@drawable/ic_upload"
+                    android:drawablePadding="8dp"
                     android:drawableTint="@color/primary"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Continue Button -->
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Fixed Bottom Button Container with White Background -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnContinue"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="32dp"
             android:backgroundTint="@color/button_primary"
             android:text="Continue"
             android:textColor="@color/button_text"
             android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardSelfie" />
+            app:cornerRadius="12dp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

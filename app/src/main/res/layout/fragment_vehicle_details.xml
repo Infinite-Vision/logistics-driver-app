@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:background="@color/background">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Fixed Header -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="24dp">
+        android:background="@color/background"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="16dp">
 
         <!-- Back Button -->
         <ImageButton
@@ -62,27 +73,52 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
-        <!-- Vehicle Number -->
-        <TextView
-            android:id="@+id/tvVehicleNumberLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Vehicle Number"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/includeSteps" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:id="@+id/tvVehicleNumberRequired"
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="100dp">
+
+        <!-- Vehicle Number -->
+        <LinearLayout
+            android:id="@+id/llVehicleNumberLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="*"
-            android:textColor="@color/error"
-            android:textSize="14sp"
-            app:layout_constraintStart_toEndOf="@id/tvVehicleNumberLabel"
-            app:layout_constraintTop_toTopOf="@id/tvVehicleNumberLabel" />
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tvVehicleNumberLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vehicle Number"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:text="*"
+                android:textColor="@color/error"
+                android:textSize="14sp" />
+
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilVehicleNumber"
@@ -90,15 +126,17 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             app:boxBackgroundColor="@android:color/white"
-            app:boxBackgroundMode="filled"
+            app:boxBackgroundMode="outline"
             app:boxCornerRadiusBottomEnd="12dp"
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeWidth="0dp"
+            app:boxStrokeColor="@color/border_light"
+            app:boxStrokeWidth="1dp"
+            app:hintTextColor="@color/text_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvVehicleNumberLabel">
+            app:layout_constraintTop_toBottomOf="@id/llVehicleNumberLabel">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etVehicleNumber"
@@ -106,6 +144,7 @@
                 android:layout_height="wrap_content"
                 android:hint="TN01AB1234"
                 android:inputType="textCapCharacters"
+                android:maxLength="15"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
@@ -130,70 +169,105 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tvRCLabel"
+                <LinearLayout
+                    android:id="@+id/llRCLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Vehicle RC"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:orientation="horizontal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btnUploadRC" />
+                    app:layout_constraintEnd_toStartOf="@id/btnUploadRC"
+                    app:layout_constraintBottom_toTopOf="@id/ivRCPreview"
+                    app:layout_constraintVertical_bias="0">
+
+                    <TextView
+                        android:id="@+id/tvRCLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vehicle RC"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:text="*"
+                        android:textColor="@color/error"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivRCPreview"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_image_preview"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/llRCLabel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="RC Preview" />
 
                 <TextView
-                    android:id="@+id/tvRCRequired"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="*"
-                    android:textColor="@color/error"
-                    android:textSize="16sp"
-                    app:layout_constraintStart_toEndOf="@id/tvRCLabel"
-                    app:layout_constraintTop_toTopOf="@id/tvRCLabel" />
-
-                <Button
                     android:id="@+id/btnUploadRC"
-                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upload"
                     android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:drawableStart="@drawable/ic_upload"
+                    android:drawablePadding="8dp"
                     android:drawableTint="@color/primary"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
         <!-- City of Operation -->
-        <TextView
-            android:id="@+id/tvCityLabel"
+        <LinearLayout
+            android:id="@+id/llCityLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="City of Operation"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:orientation="horizontal"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardRC" />
+            app:layout_constraintTop_toBottomOf="@id/cardRC">
 
-        <TextView
-            android:id="@+id/tvCityRequired"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="*"
-            android:textColor="@color/error"
-            android:textSize="14sp"
-            app:layout_constraintStart_toEndOf="@id/tvCityLabel"
-            app:layout_constraintTop_toTopOf="@id/tvCityLabel" />
+            <TextView
+                android:id="@+id/tvCityLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="City of Operation"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:text="*"
+                android:textColor="@color/error"
+                android:textSize="14sp" />
+
+        </LinearLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilCity"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -203,42 +277,52 @@
             app:boxCornerRadiusBottomStart="12dp"
             app:boxCornerRadiusTopEnd="12dp"
             app:boxCornerRadiusTopStart="12dp"
-            app:boxStrokeWidth="0dp"
+            app:boxStrokeColor="@color/border_light"
+            app:boxStrokeWidth="1dp"
+            app:hintTextColor="@color/text_hint"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvCityLabel">
+            app:layout_constraintTop_toBottomOf="@id/llCityLabel">
 
             <AutoCompleteTextView
                 android:id="@+id/actvCity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:hint="Select your city"
                 android:inputType="none"
                 android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Vehicle Type -->
-        <TextView
-            android:id="@+id/tvVehicleTypeLabel"
+        <LinearLayout
+            android:id="@+id/llVehicleTypeLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Vehicle Type"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
+            android:orientation="horizontal"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tilCity" />
+            app:layout_constraintTop_toBottomOf="@id/tilCity">
 
-        <TextView
-            android:id="@+id/tvVehicleTypeRequired"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="*"
-            android:textColor="@color/error"
-            android:textSize="14sp"
-            app:layout_constraintStart_toEndOf="@id/tvVehicleTypeLabel"
-            app:layout_constraintTop_toTopOf="@id/tvVehicleTypeLabel" />
+            <TextView
+                android:id="@+id/tvVehicleTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vehicle Type"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="2dp"
+                android:text="*"
+                android:textColor="@color/error"
+                android:textSize="14sp" />
+
+        </LinearLayout>
 
         <!-- Vehicle Type Grid -->
         <GridLayout
@@ -250,7 +334,7 @@
             android:rowCount="2"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvVehicleTypeLabel">
+            app:layout_constraintTop_toBottomOf="@id/llVehicleTypeLabel">
 
             <!-- Truck -->
             <com.google.android.material.card.MaterialCardView
@@ -425,24 +509,83 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/gridVehicleType">
 
-            <!-- Body Type Label -->
-            <TextView
-                android:id="@+id/tvBodyTypeLabel"
-                android:layout_width="wrap_content"
+            <!-- Body Details / Capacity -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="Body Type"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
+                android:orientation="horizontal">
 
-            <!-- Body Type Required -->
-            <TextView
-                android:id="@+id/tvBodyTypeRequired"
-                android:layout_width="wrap_content"
+                <TextView
+                    android:id="@+id/tvBodyDetailsLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Body Details"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:text="*"
+                    android:textColor="@color/error"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilBodyDetails"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="*"
-                android:textColor="@color/error"
-                android:textSize="14sp" />
+                android:layout_marginTop="8dp"
+                android:hint="Select capacity/size"
+                app:boxBackgroundColor="@android:color/white"
+                app:boxCornerRadiusBottomEnd="12dp"
+                app:boxCornerRadiusBottomStart="12dp"
+                app:boxCornerRadiusTopEnd="12dp"
+                app:boxCornerRadiusTopStart="12dp"
+                app:boxStrokeColor="@color/border_light"
+                app:boxStrokeWidth="1dp"
+                app:hintTextColor="@color/text_hint">
+
+                <AutoCompleteTextView
+                    android:id="@+id/actvBodyDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Select capacity/size"
+                    android:inputType="none"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_hint"
+                    android:textSize="16sp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Body Type Label -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvBodyTypeLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Body Type"
+                    android:textColor="@color/text_primary"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:text="*"
+                    android:textColor="@color/error"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
 
             <!-- Body Type Grid -->
             <GridLayout
@@ -575,65 +718,34 @@
 
             </GridLayout>
 
-            <!-- Body Details / Capacity -->
-            <TextView
-                android:id="@+id/tvBodyDetailsLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Body Details"
-                android:textColor="@color/text_primary"
-                android:textSize="14sp" />
-
-            <TextView
-                android:id="@+id/tvBodyDetailsRequired"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="*"
-                android:textColor="@color/error"
-                android:textSize="14sp" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilBodyDetails"
-                style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:hint="Select capacity/size"
-                app:boxBackgroundColor="@android:color/white"
-                app:boxCornerRadiusBottomEnd="12dp"
-                app:boxCornerRadiusBottomStart="12dp"
-                app:boxCornerRadiusTopEnd="12dp"
-                app:boxCornerRadiusTopStart="12dp"
-                app:boxStrokeWidth="0dp">
-
-                <AutoCompleteTextView
-                    android:id="@+id/actvBodyDetails"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="none"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
         </LinearLayout>
 
-        <!-- Continue Button -->
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Fixed Bottom Button Container with White Background -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
+
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnContinue"
-            android:layout_width="0dp"
+            android:id="@+id/btnContinueFixed"
+            android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="32dp"
             android:backgroundTint="@color/button_primary"
             android:text="Continue"
             android:textColor="@color/button_text"
             android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/llBodyDetailsContainer" />
+            app:cornerRadius="12dp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

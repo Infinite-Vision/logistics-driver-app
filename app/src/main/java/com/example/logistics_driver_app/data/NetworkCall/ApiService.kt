@@ -1,80 +1,151 @@
 package com.example.logistics_driver_app.data.NetworkCall
 
-import com.example.logistics_driver_app.data.model.AuthSession
-import com.example.logistics_driver_app.data.model.Driver
-import com.example.logistics_driver_app.data.model.OTPRequest
-import com.example.logistics_driver_app.data.model.OTPResponse
-import com.example.logistics_driver_app.data.model.OTPVerifyRequest
-import com.example.logistics_driver_app.data.model.OTPVerifyResponse
+import com.example.logistics_driver_app.data.model.*
 import retrofit2.Response
 import retrofit2.http.*
 
 /**
  * Retrofit API Service interface.
- * Defines all network API endpoints for the application.
- * Currently prepared for future backend integration.
+ * Defines all network API endpoints for the Logistics Driver App.
+ * Based on Backend Specification v1.
  */
 interface ApiService {
     
+    // ============= Authentication Module =============
+    
     /**
+     * 1.1 Request OTP
      * Send OTP to phone number for authentication.
-     * @param request OTP request containing country code and phone number
-     * @return Response with OTP result
+     * Endpoint: POST /api/v1/auth/otp/request
      */
     @POST("auth/otp/request")
     suspend fun requestOTP(
         @Body request: OTPRequest
-    ): Response<OTPResponse>
+    ): Response<ApiResponse<MessageResponse>>
     
     /**
-     * Verify OTP for phone number authentication.
-     * @param request OTP verification data
-     * @return Response with auth token and onboarding status
+     * 1.2 Verify OTP
+     * Verify OTP and get JWT token with onboarding status.
+     * Endpoint: POST /api/v1/auth/otp/verify
      */
     @POST("auth/otp/verify")
     suspend fun verifyOTP(
         @Body request: OTPVerifyRequest
-    ): Response<OTPVerifyResponse>
+    ): Response<ApiResponse<VerifyData>>
     
     /**
-     * Get driver profile by ID.
-     * @param driverId Driver unique identifier
-     * @return Driver profile data
+     * 1.3 Logout
+     * Revoke current JWT token.
+     * Endpoint: POST /api/v1/auth/logout
      */
-    @GET("driver/{id}")
-    suspend fun getDriverProfile(
-        @Path("id") driverId: Int
-    ): Response<Driver>
+    @POST("auth/logout")
+    suspend fun logout(
+        @Header("Authorization") token: String
+    ): Response<LogoutResponse>
+    
+    // ============= App State Module =============
     
     /**
-     * Create new driver profile.
-     * @param driver Driver data to create
-     * @return Created driver data with ID
+     * 2.1 Get App State
+     * Get user's current onboarding progress and next screen.
+     * Endpoint: GET /api/v1/app/state
      */
-    @POST("driver")
-    suspend fun createDriverProfile(
-        @Body driver: Driver
-    ): Response<Driver>
+    @GET("app/state")
+    suspend fun getAppState(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<AppStateResponse>>
+    
+    // ============= User Preferences Module =============
     
     /**
-     * Update existing driver profile.
-     * @param driverId Driver ID to update
-     * @param driver Updated driver data
-     * @return Updated driver data
+     * 3.1 Update Preferred Language
+     * Update user's preferred language.
+     * Endpoint: POST /api/v1/users/language
      */
-    @PUT("driver/{id}")
-    suspend fun updateDriverProfile(
-        @Path("id") driverId: Int,
-        @Body driver: Driver
-    ): Response<Driver>
+    @POST("users/language")
+    suspend fun updateLanguage(
+        @Header("Authorization") token: String,
+        @Body request: UpdateLanguageRequest
+    ): Response<ApiResponse<UpdateLanguageResponse>>
+    
+    // ============= Onboarding Owner Module =============
     
     /**
-     * Delete driver profile.
-     * @param driverId Driver ID to delete
-     * @return Success response
+     * 4.1 Save Owner
+     * Save or update vehicle owner details.
+     * Endpoint: POST /api/v1/onboarding/owner
      */
-    @DELETE("driver/{id}")
-    suspend fun deleteDriverProfile(
-        @Path("id") driverId: Int
-    ): Response<Map<String, Any>>
+    @POST("onboarding/owner")
+    suspend fun saveOwner(
+        @Header("Authorization") token: String,
+        @Body request: SaveOwnerRequest
+    ): Response<ApiResponse<OwnerResponse>>
+    
+    /**
+     * 4.2 Get Owner
+     * Get saved owner details.
+     * Endpoint: GET /api/v1/onboarding/owner
+     */
+    @GET("onboarding/owner")
+    suspend fun getOwner(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<OwnerResponse>>
+    
+    // ============= Onboarding Vehicle Module =============
+    
+    /**
+     * 5.1 Save Vehicle
+     * Save or update vehicle details.
+     * Endpoint: POST /api/v1/onboarding/vehicle
+     */
+    @POST("onboarding/vehicle")
+    suspend fun saveVehicle(
+        @Header("Authorization") token: String,
+        @Body request: SaveVehicleRequest
+    ): Response<ApiResponse<VehicleResponse>>
+    
+    /**
+     * 5.2 Get Vehicle
+     * Get saved vehicle details.
+     * Endpoint: GET /api/v1/onboarding/vehicle
+     */
+    @GET("onboarding/vehicle")
+    suspend fun getVehicle(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<VehicleResponse>>
+    
+    // ============= Onboarding Driver Module =============
+    
+    /**
+     * 6.1 Save Driver
+     * Save or update driver details.
+     * Endpoint: POST /api/v1/onboarding/driver
+     */
+    @POST("onboarding/driver")
+    suspend fun saveDriver(
+        @Header("Authorization") token: String,
+        @Body request: SaveDriverRequest
+    ): Response<ApiResponse<DriverResponse>>
+    
+    /**
+     * 6.2 Get Driver
+     * Get saved driver details.
+     * Endpoint: GET /api/v1/onboarding/driver
+     */
+    @GET("onboarding/driver")
+    suspend fun getDriver(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<DriverResponse>>
+    
+    // ============= Meta Module =============
+    
+    /**
+     * 7.1 Get Vehicle Form Options
+     * Get dropdown options for vehicle form (localized).
+     * Endpoint: GET /api/v1/meta/vehicle-form-options
+     */
+    @GET("meta/vehicle-form-options")
+    suspend fun getVehicleFormOptions(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<VehicleFormOptionsResponse>>
 }

@@ -1,5 +1,6 @@
 package com.example.logistics_driver_app.data.NetworkCall
 
+import android.content.Context
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -9,14 +10,24 @@ import java.util.concurrent.TimeUnit
 
 /**
  * RetrofitClient - Singleton for Retrofit instance management.
- * Configures HTTP client, logging, and converters for API calls.
+ * Configures HTTP client, logging, auth interceptor, and converters for API calls.
  */
 object RetrofitClient {
     
-    private const val BASE_URL = "https://hyperactively-florescent-addilyn.ngrok-free.dev/api/v1/"
+    private const val BASE_URL = "http://43.205.235.73:8080/api/v1/"
     private const val TIMEOUT = 30L
     
     private var retrofit: Retrofit? = null
+    private var context: Context? = null
+    
+    /**
+     * Initialize RetrofitClient with application context.
+     * Should be called once in Application class.
+     */
+    fun initialize(appContext: Context) {
+        context = appContext.applicationContext
+        retrofit = null // Reset retrofit to rebuild with new context
+    }
     
     /**
      * Get configured Retrofit instance.
@@ -31,12 +42,18 @@ object RetrofitClient {
             }
             
             // OkHttp client with interceptors and timeouts
-            val okHttpClient = OkHttpClient.Builder()
+            val okHttpClientBuilder = OkHttpClient.Builder()
                 .addInterceptor(loggingInterceptor)
                 .connectTimeout(TIMEOUT, TimeUnit.SECONDS)
                 .readTimeout(TIMEOUT, TimeUnit.SECONDS)
                 .writeTimeout(TIMEOUT, TimeUnit.SECONDS)
-                .build()
+            
+            // Add auth interceptor if context is available
+            context?.let {
+                okHttpClientBuilder.addInterceptor(AuthInterceptor(it))
+            }
+            
+            val okHttpClient = okHttpClientBuilder.build()
             
             // Gson for JSON serialization/deserialization
             val gson = GsonBuilder()

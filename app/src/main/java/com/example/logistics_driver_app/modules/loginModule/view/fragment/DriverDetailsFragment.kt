@@ -9,13 +9,21 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.Common.util.Bakery
+import com.example.logistics_driver_app.Common.util.S3UploadUtil
 import com.example.logistics_driver_app.Common.util.SharedPreference
 import com.example.logistics_driver_app.Common.util.ValidationUtil
+import com.example.logistics_driver_app.Common.util.ViewUtils
 import com.example.logistics_driver_app.R
 import com.example.logistics_driver_app.databinding.FragmentDriverDetailsNewBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
+import com.example.logistics_driver_app.modules.loginModule.viewModel.OnboardingViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * DriverDetailsFragment - Driver details entry screen (Step 3/3).
@@ -23,6 +31,7 @@ import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
  */
 class DriverDetailsFragment : BaseFragment<FragmentDriverDetailsNewBinding>() {
 
+    private lateinit var viewModel: OnboardingViewModel
     private var willDrive: Boolean = true
     private var licenseUri: Uri? = null
 
@@ -32,6 +41,11 @@ class DriverDetailsFragment : BaseFragment<FragmentDriverDetailsNewBinding>() {
     ) { uri: Uri? ->
         uri?.let {
             licenseUri = it
+            binding.apply {
+                // Show image preview
+                ivLicensePreview.setImageURI(it)
+                ivLicensePreview.visibility = View.VISIBLE
+            }
             Bakery.showToast(requireContext(), "License uploaded")
             validateForm()
         }
@@ -47,8 +61,11 @@ class DriverDetailsFragment : BaseFragment<FragmentDriverDetailsNewBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        viewModel = ViewModelProvider(this)[OnboardingViewModel::class.java]
+        
         setupProgressSteps()
         setupViews()
+        observeViewModel()
     }
 
     private fun setupProgressSteps() {
@@ -71,6 +88,11 @@ class DriverDetailsFragment : BaseFragment<FragmentDriverDetailsNewBinding>() {
 
     private fun setupViews() {
         binding.apply {
+            // Back button
+            btnBack.setOnClickListener {
+                findNavController().navigateUp()
+            }
+            
             // Yes/No radio buttons
             cardYes.setOnClickListener {
                 selectOption(true)
@@ -170,31 +192,84 @@ class DriverDetailsFragment : BaseFragment<FragmentDriverDetailsNewBinding>() {
         }
 
         binding.apply {
-            // Save data locally
-            val sharedPref = SharedPreference.getInstance(requireContext())
-
-            sharedPref.saveWillDrive(willDrive)
-
-            if (willDrive) {
-                // Owner will drive - clear old driver data
-                sharedPref.setDriverName("")
-                sharedPref.saveDriverPhone("")
-            } else {
-                // Save driver details
-                val driverName = etDriverName.text.toString().trim()
-                val driverPhone = etDriverPhone.text.toString().trim()
-
-                sharedPref.setDriverName(driverName)
-                sharedPref.saveDriverPhone(driverPhone)
+            val driverName = if (willDrive) null else etDriverName.text.toString().trim()
+            val driverPhone = if (willDrive) null else etDriverPhone.text.toString().trim()
+            
+            // Show loading
+            Bakery.showToast(requireContext(), "Uploading license document...")
+            ViewUtils.disable(btnSubmit)
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Upload license to S3
+                    val licenseUrl = licenseUri?.let { uri ->
+                        S3UploadUtil.uploadFile(
+                            requireContext(),
+                            uri,
+                            "documents/driver/license_${System.currentTimeMillis()}.jpg"
+                        )
+                    }
+                    
+                    withContext(Dispatchers.Main) {
+                        if (licenseUrl != null && licenseUrl.isNotEmpty()) {
+                            // Call API with S3 URL
+                            viewModel.saveDriver(
+                                isSelfDriving = willDrive,
+                                name = driverName,
+                                phoneNumber = driverPhone,
+                                driverLicenseUrl = licenseUrl
+                            )
+                            
+                            // Save locally as well
+                            val sharedPref = SharedPreference.getInstance(requireContext())
+                            sharedPref.saveWillDrive(willDrive)
+                            
+                            if (willDrive) {
+                                sharedPref.setDriverName("")
+                                sharedPref.saveDriverPhone("")
+                            } else {
+                                sharedPref.setDriverName(driverName ?: "")
+                                sharedPref.saveDriverPhone(driverPhone ?: "")
+                            }
+                            
+                            licenseUri?.let {
+                                sharedPref.saveLicenseUri(it.toString())
+                            }
+                        } else {
+                            Bakery.showToast(requireContext(), "Failed to upload license document")
+                            ViewUtils.enable(btnSubmit)
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("DriverDetailsFragment", "Upload error", e)
+                    withContext(Dispatchers.Main) {
+                        Bakery.showToast(requireContext(), "Error: ${e.message}")
+                        ViewUtils.enable(btnSubmit)
+                    }
+                }
             }
-
-            // Save license URI
-            licenseUri?.let {
-                sharedPref.saveLicenseUri(it.toString())
+        }
+    }
+    
+    private fun observeViewModel() {
+        viewModel.driverSaveSuccess.observe(viewLifecycleOwner) { success ->
+            if (success) {
+                Bakery.showToast(requireContext(), "Driver details saved successfully")
+                navigateToVerificationProgress()
             }
-
-            Bakery.showToast(requireContext(), "Driver details saved")
-            navigateToVerificationProgress()
+        }
+        
+        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Bakery.showToast(requireContext(), it)
+                ViewUtils.enable(binding.btnSubmit)
+            }
+        }
+        
+        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                ViewUtils.disable(binding.btnSubmit)
+            }
         }
     }
 

@@ -3,7 +3,7 @@ package com.example.logistics_driver_app.data.NetworkCall
 /**
  * ApiConfig - Central API configuration and endpoint documentation.
  * 
- * Base URL: https://hyperactively-florescent-addilyn.ngrok-free.dev/api/v1/
+ * Base URL: http://43.205.235.73:8080/api/v1/
  * 
  * Available Endpoints:
  * 
@@ -44,7 +44,7 @@ package com.example.logistics_driver_app.data.NetworkCall
  * - Country code defaults to +91 for India
  */
 object ApiConfig {
-    const val BASE_URL = "https://hyperactively-florescent-addilyn.ngrok-free.dev/api/v1/"
+    const val BASE_URL = "http://43.205.235.73:8080/api/v1/"
     const val TIMEOUT_SECONDS = 30L
     
     object Paths {

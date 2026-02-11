@@ -1,15 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:background="@color/background">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <!-- Fixed Header -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="24dp">
+        android:background="@color/background"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="16dp">
 
         <!-- Back Button -->
         <ImageButton
@@ -62,17 +73,35 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnBack" />
 
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Scrollable Content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="100dp">
+
         <!-- Will Drive Question -->
         <TextView
             android:id="@+id/tvWillDriveLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="16dp"
             android:text="I will be driving this vehicle"
             android:textColor="@color/text_primary"
             android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/includeSteps" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tvWillDriveRequired"
@@ -217,8 +246,8 @@
                 android:id="@+id/etDriverName"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="test"
-                android:inputType="textPersonName"
+                android:hint="Enter driver name"
+                android:inputType="textPersonName|textCapWords"
                 android:textColor="@color/text_primary"
                 android:textColorHint="@color/text_hint"
                 android:textSize="16sp" />
@@ -325,60 +354,100 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
 
-                <TextView
-                    android:id="@+id/tvLicenseLabel"
+                <LinearLayout
+                    android:id="@+id/llLicenseLabel"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Driving License"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
+                    android:orientation="horizontal"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btnUploadLicense" />
+                    app:layout_constraintEnd_toStartOf="@id/btnUploadLicense"
+                    app:layout_constraintBottom_toTopOf="@id/ivLicensePreview"
+                    app:layout_constraintVertical_bias="0">
+
+                    <TextView
+                        android:id="@+id/tvLicenseLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Driving License"
+                        android:textColor="@color/text_primary"
+                        android:textSize="16sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="2dp"
+                        android:text="*"
+                        android:textColor="@color/error"
+                        android:textSize="16sp" />
+
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivLicensePreview"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_marginTop="16dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_image_preview"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/llLicenseLabel"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="License Preview" />
 
                 <TextView
-                    android:id="@+id/tvLicenseRequired"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="*"
-                    android:textColor="@color/error"
-                    android:textSize="16sp"
-                    app:layout_constraintStart_toEndOf="@id/tvLicenseLabel"
-                    app:layout_constraintTop_toTopOf="@id/tvLicenseLabel" />
-
-                <Button
                     android:id="@+id/btnUploadLicense"
-                    style="@style/Widget.Material3.Button.TextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Upload"
                     android:textColor="@color/primary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
                     android:drawableStart="@drawable/ic_upload"
+                    android:drawablePadding="8dp"
                     android:drawableTint="@color/primary"
+                    android:background="?attr/selectableItemBackground"
+                    android:padding="8dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Submit Button -->
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Fixed Bottom Button Container with White Background -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp">
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSubmit"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:layout_marginTop="32dp"
             android:backgroundTint="@color/button_primary"
             android:text="Submit for Verification"
             android:textColor="@color/button_text"
             android:textSize="16sp"
-            app:cornerRadius="12dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cardLicense" />
+            app:cornerRadius="12dp" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </FrameLayout>
 
-</ScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -9,7 +9,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    android:padding="24dp">
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="24dp"
+    android:paddingTop="48dp">
 
     <!-- Back Button -->
     <ImageButton
@@ -201,13 +204,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+</androidx.constraintlayout.widget.ConstraintLayout>
+
     <!-- Success Overlay -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clSuccessOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/background"
-        android:padding="24dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp"
+        android:paddingTop="48dp"
         android:visibility="gone">
 
         <!-- Back Button -->
@@ -327,7 +335,5 @@
             app:layout_constraintTop_toBottomOf="@id/vSuccessCircle" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

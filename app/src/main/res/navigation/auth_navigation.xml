@@ -60,13 +60,29 @@
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_otpVerification_to_vehicleDetails"
+            app:destination="@id/vehicleDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_otpVerification_to_driverDetails"
+            app:destination="@id/driverDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right"
             app:popUpTo="@id/languageSelectionFragment"
             app:popUpToInclusive="true" />
         
         <action
-            android:id="@+id/action_otpVerification_to_driverDetails"
-            app:destination="@id/driverDetailsFragment"
+            android:id="@+id/action_otpVerification_to_verificationProgress"
+            app:destination="@id/verificationProgressFragment"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
@@ -89,6 +105,24 @@
             app:exitAnim="@anim/slide_out_left"
             app:popEnterAnim="@android:anim/slide_in_left"
             app:popExitAnim="@android:anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_ownerDetails_to_driverDetails"
+            app:destination="@id/driverDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_ownerDetails_to_verificationProgress"
+            app:destination="@id/verificationProgressFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@android:anim/slide_in_left"
+            app:popExitAnim="@android:anim/slide_out_right"
+            app:popUpTo="@id/ownerDetailsFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- Vehicle Details Fragment (Step 2) -->

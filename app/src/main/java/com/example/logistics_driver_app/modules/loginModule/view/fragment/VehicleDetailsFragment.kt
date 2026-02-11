@@ -7,15 +7,22 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.isVisible
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.Common.util.Bakery
+import com.example.logistics_driver_app.Common.util.S3UploadUtil
 import com.example.logistics_driver_app.Common.util.SharedPreference
 import com.example.logistics_driver_app.Common.util.ViewUtils
 import com.example.logistics_driver_app.R
 import com.example.logistics_driver_app.databinding.FragmentVehicleDetailsBinding
 import com.example.logistics_driver_app.databinding.IncludeProgressStepsBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
+import com.example.logistics_driver_app.modules.loginModule.viewModel.OnboardingViewModel
 import com.google.android.material.card.MaterialCardView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * VehicleDetailsFragment - Vehicle details form (Step 2 of 3).
@@ -24,6 +31,7 @@ import com.google.android.material.card.MaterialCardView
 class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     
     private lateinit var sharedPreference: SharedPreference
+    private lateinit var viewModel: OnboardingViewModel
     private var rcUri: android.net.Uri? = null
     private var selectedVehicleType: String? = null
     private var selectedBodyType: String? = null
@@ -33,6 +41,11 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     ) { uri: android.net.Uri? ->
         uri?.let {
             rcUri = it
+            binding.apply {
+                // Show image preview
+                ivRCPreview.setImageURI(it)
+                ivRCPreview.visibility = View.VISIBLE
+            }
             Bakery.showToast(requireContext(), "RC uploaded")
             updateContinueButton()
         }
@@ -46,11 +59,24 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     }
     
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        
-        sharedPreference = SharedPreference.getInstance(requireContext())
-        setupProgressSteps()
-        setupViews()
+        try {
+            super.onViewCreated(view, savedInstanceState)
+            
+            android.util.Log.d("VehicleDetailsFragment", "=== onViewCreated ===")
+            
+            sharedPreference = SharedPreference.getInstance(requireContext())
+            viewModel = ViewModelProvider(this)[OnboardingViewModel::class.java]
+            
+            setupProgressSteps()
+            setupViews()
+            observeViewModel()
+            
+            android.util.Log.d("VehicleDetailsFragment", "=== onViewCreated completed successfully ===")
+        } catch (e: Exception) {
+            android.util.Log.e("VehicleDetailsFragment", "CRASH in onViewCreated!", e)
+            e.printStackTrace()
+            throw e
+        }
     }
     
     private fun setupProgressSteps() {
@@ -77,7 +103,7 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
         binding.apply {
             // Back button
             btnBack.setOnClickListener {
-                requireActivity().onBackPressed()
+                findNavController().navigateUp()
             }
             
             // RC Upload
@@ -102,10 +128,12 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
             // Body Type Cards
             setupBodyTypeCards()
             
-            // Body Details/Capacity dropdown
+            // Body Details/Capacity dropdown - API enum values
             val capacities = arrayOf(
-                "Less than 500 kg", "500 kg - 1 ton", "1 ton - 2 ton",
-                "2 ton - 5 ton", "5 ton - 10 ton", "More than 10 ton"
+                "8 ft / 1.5 ton",
+                "14 ft / 3.5 ton",
+                "17 ft / 4.5 ton",
+                "19 ft / 6 ton"
             )
             val capacityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, capacities)
             actvBodyDetails.setAdapter(capacityAdapter)
@@ -114,11 +142,10 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
             }
             
             // Continue button - initially disabled
-            ViewUtils.disable(btnContinue)
-            btnContinue.setOnClickListener {
+            ViewUtils.disable(btnContinueFixed)
+            btnContinueFixed.setOnClickListener {
                 if (validateForm()) {
-                    saveDataLocally()
-                    navigateToDriverDetails()
+                    uploadAndSaveVehicle()
                 }
             }
             
@@ -253,9 +280,9 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
                            selectedBodyType != null && bodyDetails.isNotEmpty()
             
             if (isComplete) {
-                ViewUtils.enable(btnContinue)
+                ViewUtils.enable(btnContinueFixed)
             } else {
-                ViewUtils.disable(btnContinue)
+                ViewUtils.disable(btnContinueFixed)
             }
         }
     }
@@ -264,7 +291,16 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
         binding.apply {
             val vehicleNumber = etVehicleNumber.text.toString().trim()
             val city = actvCity.text.toString()
-            val bodyDetails = actvBodyDetails.text.toString()
+            val bodyDetailsDisplay = actvBodyDetails.text.toString()
+            
+            // Convert display value to API enum format
+            val bodyDetails = when (bodyDetailsDisplay) {
+                "8 ft / 1.5 ton" -> "EIGHT_FT_1_5_TON"
+                "14 ft / 3.5 ton" -> "FOURTEEN_FT_3_5_TON"
+                "17 ft / 4.5 ton" -> "SEVENTEEN_FT_4_5_TON"
+                "19 ft / 6 ton" -> "NINETEEN_FT_6_TON"
+                else -> bodyDetailsDisplay
+            }
             
             // Save to SharedPreferences
             sharedPreference.saveVehicleNumber(vehicleNumber)
@@ -273,6 +309,104 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
             sharedPreference.saveVehicleType(selectedVehicleType ?: "")
             sharedPreference.saveBodyType(selectedBodyType ?: "")
             sharedPreference.saveBodyCapacity(bodyDetails)
+        }
+    }
+    
+    private fun uploadAndSaveVehicle() {
+        binding.apply {
+            val vehicleNumber = etVehicleNumber.text.toString().trim()
+            val city = actvCity.text.toString()
+            val bodyDetailsDisplay = actvBodyDetails.text.toString()
+            
+            // Convert display values to API enum formats
+            val bodyDetailsEnum = when (bodyDetailsDisplay) {
+                "8 ft / 1.5 ton" -> "EIGHT_FT_1_5_TON"
+                "14 ft / 3.5 ton" -> "FOURTEEN_FT_3_5_TON"
+                "17 ft / 4.5 ton" -> "SEVENTEEN_FT_4_5_TON"
+                "19 ft / 6 ton" -> "NINETEEN_FT_6_TON"
+                else -> bodyDetailsDisplay
+            }
+            
+            val vehicleTypeEnum = when (selectedVehicleType) {
+                "Truck" -> "TRUCK"
+                "Mini Truck" -> "MINI_TRUCK"
+                "3-Wheeler" -> "THREE_WHEELER"
+                "Pickup" -> "PICKUP"
+                else -> selectedVehicleType ?: ""
+            }
+            
+            val bodyTypeEnum = when (selectedBodyType) {
+                "Open" -> "OPEN"
+                "Closed" -> "CLOSED"
+                "Semi-Open" -> "SEMI_OPEN"
+                else -> selectedBodyType ?: ""
+            }
+            
+            // Show loading
+            Bakery.showToast(requireContext(), "Uploading RC document...")
+            ViewUtils.disable(btnContinueFixed)
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Upload RC to S3
+                    val rcUrl = rcUri?.let { uri ->
+                        S3UploadUtil.uploadFile(
+                            requireContext(),
+                            uri,
+                            "documents/vehicle/rc_${System.currentTimeMillis()}.jpg"
+                        )
+                    } ?: ""
+                    
+                    withContext(Dispatchers.Main) {
+                        if (rcUrl.isNotEmpty()) {
+                            // Call API with S3 URL
+                            viewModel.saveVehicle(
+                                registrationNumber = vehicleNumber,
+                                vehicleType = vehicleTypeEnum,
+                                bodyType = bodyTypeEnum,
+                                bodySpec = bodyDetailsEnum,
+                                rcUrl = rcUrl,
+                                insuranceUrl = "", // Optional
+                                pucUrl = "" // Optional
+                            )
+                            
+                            // Save locally as well
+                            saveDataLocally()
+                        } else {
+                            Bakery.showToast(requireContext(), "Failed to upload RC document")
+                            ViewUtils.enable(btnContinueFixed)
+                        }
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("VehicleDetailsFragment", "Upload error", e)
+                    withContext(Dispatchers.Main) {
+                        Bakery.showToast(requireContext(), "Error: ${e.message}")
+                        ViewUtils.enable(btnContinueFixed)
+                    }
+                }
+            }
+        }
+    }
+    
+    private fun observeViewModel() {
+        viewModel.vehicleSaveSuccess.observe(viewLifecycleOwner) { success ->
+            if (success) {
+                Bakery.showToast(requireContext(), "Vehicle details saved successfully")
+                navigateToDriverDetails()
+            }
+        }
+        
+        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Bakery.showToast(requireContext(), it)
+                ViewUtils.enable(binding.btnContinueFixed)
+            }
+        }
+        
+        viewModel.loading.observe(viewLifecycleOwner) { isLoading ->
+            if (isLoading) {
+                ViewUtils.disable(binding.btnContinueFixed)
+            }
         }
     }
     

@@ -52,7 +52,7 @@ class PhoneEntryFragment : BaseFragment<FragmentPhoneEntryBinding>() {
             
             // Back button
             btnBack.setOnClickListener {
-                requireActivity().onBackPressed()
+                findNavController().navigateUp()
             }
             
             // Setup legal text with clickable links

@@ -57,7 +57,7 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
         binding.apply {
             // Back button
             btnBack.setOnClickListener {
-                requireActivity().onBackPressed()
+                findNavController().navigateUp()
             }
             
             // Display phone number
@@ -82,14 +82,19 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
             
             // Verify button
             btnVerify.setOnClickListener {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION_FLOW] ===== VERIFY BUTTON CLICKED =====")
                 val otp = getOtpFromFields()
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION_FLOW] OTP entered: ****")
                 if (ValidationUtil.isValidOTP(otp)) {
                     ViewUtils.hideKeyboard(requireContext(), requireView())
                     // Get language code from SharedPreference and convert to uppercase for API
                     val languageCode = (sharedPreference.getLanguage() ?: "en").uppercase()
+                    android.util.Log.d("OTPVerificationFragment", "[NAVIGATION_FLOW] Language: $languageCode")
+                    android.util.Log.d("OTPVerificationFragment", "[NAVIGATION_FLOW] Calling viewModel.verifyOTP()...")
                     // TODO: Get country code from UI (for now using +91)
                     viewModel.verifyOTP("+91", args.phoneNumber, otp, languageCode)
                 } else {
+                    android.util.Log.w("OTPVerificationFragment", "[NAVIGATION_FLOW] Invalid OTP format")
                     Bakery.showToast(requireContext(), getString(R.string.error_invalid_otp))
                 }
             }
@@ -170,42 +175,58 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
     }
     
     private fun observeViewModel() {
-        viewModel.verificationSuccess.observe(viewLifecycleOwner, Observer { success ->
-            if (success) {
-                // Show success overlay for 3 seconds
+        android.util.Log.d("OTPVerificationFragment", "[OBSERVER] ===== SETTING UP OBSERVERS =====")
+        android.util.Log.d("OTPVerificationFragment", "[OBSERVER] Current lifecycle state: ${viewLifecycleOwner.lifecycle.currentState}")
+        
+        // Observe app state next screen for proper routing
+        viewModel.nextScreen.observe(viewLifecycleOwner, Observer { nextScreen ->
+            android.util.Log.d("OTPVerificationFragment", "[OBSERVER] nextScreen observer triggered: '$nextScreen'")
+            
+            if (!nextScreen.isNullOrEmpty()) {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] NextScreen received: $nextScreen")
+                
+                // Show success overlay and navigate after 3 seconds
                 showSuccessScreen()
                 
-                // Wait 3 seconds then proceed
                 binding.root.postDelayed({
-                    // Navigation handled by onboardingStatus observer
-                    viewModel.onboardingStatus.value?.let { status ->
-                        if (status == "IN_PROGRESS") {
-                            viewModel.onboardingStep.value?.let { step ->
-                                navigateBasedOnStep(step)
-                            }
-                        } else if (status == "COMPLETED") {
-                            navigateToDriverDetails()
-                        }
-                    }
+                    android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] Executing navigation to: $nextScreen")
+                    navigateToScreen(nextScreen)
                 }, 3000) // 3 seconds delay
+            } else {
+                android.util.Log.w("OTPVerificationFragment", "[OBSERVER] nextScreen is null or empty, checking verificationSuccess")
+                // If nextScreen is empty but verification succeeded, use fallback
+                if (viewModel.verificationSuccess.value == true) {
+                    android.util.Log.w("OTPVerificationFragment", "[FALLBACK] Using fallback navigation to Owner Details")
+                    showSuccessScreen()
+                    binding.root.postDelayed({
+                        navigateToOwnerDetails()
+                    }, 3000)
+                }
+            }
+        })
+        
+        viewModel.verificationSuccess.observe(viewLifecycleOwner, Observer { success ->
+            android.util.Log.d("OTPVerificationFragment", "[OBSERVER] ===== verificationSuccess TRIGGERED =====")
+            android.util.Log.d("OTPVerificationFragment", "[OBSERVER] verificationSuccess value: $success")
+            android.util.Log.d("OTPVerificationFragment", "[OBSERVER] Current nextScreen value: ${viewModel.nextScreen.value}")
+            if (success) {
+                android.util.Log.d("OTPVerificationFragment", "[SUCCESS] ===== OTP VERIFIED SUCCESSFULLY =====")
+                android.util.Log.d("OTPVerificationFragment", "[SUCCESS] Waiting for nextScreen value from app state API...")
+                android.util.Log.d("OTPVerificationFragment", "[SUCCESS] Token saved: ${sharedPreference.getSessionToken()?.take(15)}...")
+                // Navigation handled by nextScreen observer above
+            } else {
+                android.util.Log.e("OTPVerificationFragment", "[ERROR] OTP verification FAILED")
             }
         })
         
         viewModel.onboardingStatus.observe(viewLifecycleOwner, Observer { status ->
-            // Route based on onboarding status
-            if (status == "IN_PROGRESS") {
-                // Check onboarding step
-                viewModel.onboardingStep.value?.let { step ->
-                    navigateBasedOnStep(step)
-                }
-            } else if (status == "COMPLETED") {
-                // If onboarding is complete, navigate to main app (future)
-                navigateToDriverDetails() // For now, still go to driver details
-            }
+            // Keep for backward compatibility if app state call fails
+            android.util.Log.d("OTPVerificationFragment", "[STATUS] Onboarding status: $status")
         })
         
         viewModel.onboardingStep.observe(viewLifecycleOwner, Observer { step ->
-            // This will be triggered after status is set
+            // Keep for backward compatibility if app state call fails
+            android.util.Log.d("OTPVerificationFragment", "[STATUS] Onboarding step: $step")
         })
         
         viewModel.errorMessage.observe(viewLifecycleOwner, Observer { errorMsg ->
@@ -240,6 +261,44 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
         })
     }
     
+    /**
+     * Navigate to screen based on app state nextScreen value.
+     * Possible values: OWNER_DETAILS, VEHICLE_DETAILS, DRIVER_DETAILS, HOME, verification_in_progress
+     */
+    private fun navigateToScreen(nextScreen: String) {
+        android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] Navigating to: $nextScreen")
+        
+        val screenKey = nextScreen.uppercase().replace("_", "")
+        
+        when (screenKey) {
+            "OWNERDETAILS", "OWNER" -> {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Owner Details")
+                navigateToOwnerDetails()
+            }
+            "VEHICLEDETAILS", "VEHICLE" -> {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Vehicle Details")
+                navigateToVehicleDetails()
+            }
+            "DRIVERDETAILS", "DRIVER" -> {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Driver Details")
+                navigateToDriverDetails()
+            }
+            "VERIFICATIONINPROGRESS", "VERIFICATION", "PENDING" -> {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Verification Progress (24-48 hrs pending)")
+                navigateToVerificationProgress()
+            }
+            "HOME", "DASHBOARD" -> {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Home (not implemented)")
+                // TODO: Navigate to main app home/dashboard
+                navigateToOwnerDetails() // Fallback for now
+            }
+            else -> {
+                android.util.Log.w("OTPVerificationFragment", "[NAVIGATION] Unknown screen: $nextScreen, defaulting to Owner Details")
+                navigateToOwnerDetails()
+            }
+        }
+    }
+    
     private fun navigateBasedOnStep(step: String) {
         when (step) {
             "OWNER" -> navigateToOwnerDetails()
@@ -256,14 +315,32 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
     }
     
     private fun navigateToVehicleDetails() {
-        // TODO: Navigate once VehicleDetails action is created
-        navigateToOwnerDetails() // Fallback for now
+        try {
+            val action = OTPVerificationFragmentDirections
+                .actionOtpVerificationToVehicleDetails()
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            android.util.Log.e("OTPVerificationFragment", "Navigation to Vehicle Details failed", e)
+            // Fallback to Owner Details if navigation fails
+            navigateToOwnerDetails()
+        }
     }
     
     private fun navigateToDriverDetails() {
         val action = OTPVerificationFragmentDirections
             .actionOtpVerificationToOwnerDetails()  // Updated to go to Owner Details first
         findNavController().navigate(action)
+    }
+    
+    private fun navigateToVerificationProgress() {
+        android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] Navigating to Verification Progress screen")
+        try {
+            val action = OTPVerificationFragmentDirections
+                .actionOtpVerificationToVerificationProgress()
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            android.util.Log.e("OTPVerificationFragment", "Navigation to Verification Progress failed", e)
+        }
     }
     
     override fun onDestroyView() {
