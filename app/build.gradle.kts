@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,6 +19,24 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Load AWS credentials from aws.properties file
+        val awsPropertiesFile = rootProject.file("aws.properties")
+        if (awsPropertiesFile.exists()) {
+            val awsProperties = Properties()
+            awsProperties.load(awsPropertiesFile.inputStream())
+            
+            buildConfigField("String", "AWS_ACCESS_KEY", "\"${awsProperties.getProperty("aws.access.key", "")}\"")
+            buildConfigField("String", "AWS_SECRET_KEY", "\"${awsProperties.getProperty("aws.secret.key", "")}\"")
+            buildConfigField("String", "S3_BUCKET_NAME", "\"${awsProperties.getProperty("s3.bucket.name", "")}\"")
+            buildConfigField("String", "S3_REGION_NAME", "\"${awsProperties.getProperty("s3.region.name", "")}\"")
+        } else {
+            // Fallback empty values if file doesn't exist
+            buildConfigField("String", "AWS_ACCESS_KEY", "\"\"")
+            buildConfigField("String", "AWS_SECRET_KEY", "\"\"")
+            buildConfigField("String", "S3_BUCKET_NAME", "\"\"")
+            buildConfigField("String", "S3_REGION_NAME", "\"\"")
+        }
     }
 
     buildTypes {
@@ -29,14 +49,15 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(21)
     }
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
@@ -78,6 +99,7 @@ dependencies {
     // Play Services
     implementation(libs.play.services.auth)
     implementation(libs.play.services.auth.api.phone)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     
     androidTestImplementation(libs.androidx.espresso.core)
 }

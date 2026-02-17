@@ -72,7 +72,9 @@ class TripRequestBottomSheet : BottomSheetDialogFragment() {
             override fun onFinish() {
                 hasUserResponded = true
                 onTimeoutListener?.invoke()
-                dismiss()
+                // Use dismissAllowingStateLoss to prevent IllegalStateException
+                // when timer finishes after activity state is saved
+                dismissAllowingStateLoss()
             }
         }.start()
     }

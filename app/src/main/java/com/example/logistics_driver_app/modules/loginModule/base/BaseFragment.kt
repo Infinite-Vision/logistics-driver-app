@@ -14,7 +14,7 @@ import com.example.logistics_driver_app.Common.util.ConnectivityUtil
  */
 abstract class BaseFragment<VB : ViewBinding> : Fragment() {
 
-    private var _binding: VB? = null
+    protected var _binding: VB? = null
     protected val binding get() = _binding!!
     protected lateinit var connectivityUtil: ConnectivityUtil
 

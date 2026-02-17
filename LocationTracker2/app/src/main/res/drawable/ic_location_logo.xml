@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Outer pin with gradient-like overlay -->
+    <path
+        android:fillColor="#FF3B82F6"
+        android:pathData="M48,6C31.4,6 18,19.4 18,36c0,19.5 21.7,40.7 28.4,46.6a4,4 0,0 0,5.2 0C56.3,76.7 78,55.5 78,36 78,19.4 64.6,6 48,6z" />
+
+    <path
+        android:fillColor="#803B82F6"
+        android:pathData="M48,10C34,10 23,21 23,35c0,16.6 18.3,34.7 25,40.5 6.7,-5.8 25,-23.9 25,-40.5C73,21 62,10 48,10z" />
+
+    <!-- Inner circle -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M48,24a12,12 0,1 1,0 24,12 12,0 0,1 0,-24z" />
+
+    <!-- Bottom shadow -->
+    <path
+        android:fillColor="#19000000"
+        android:pathData="M24,82c0,5.5 10.7,10 24,10 13.3,0 24,-4.5 24,-10 0,-3 -3.1,-4.9 -8,-6.5 -4.3,3.1 -10,5.5 -16,5.5 -6,0 -11.7,-2.4 -16,-5.5 -4.9,1.6 -8,3.5 -8,6.5z" />
+
+</vector>
+

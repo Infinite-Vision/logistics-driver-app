@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -24,6 +25,10 @@ import java.util.Locale
  * This is the first screen after login/verification
  */
 class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
+
+    companion object {
+        private const val TAG = "DriverHomeFragment"
+    }
 
     private val viewModel: DriverHomeViewModel by viewModels()
     private var isOnline = false
@@ -284,16 +289,21 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     private fun onSliderCompleted() {
         if (!isOnline && canGoOnline) {
             // Go online
+            Log.d(TAG, "[WEBSOCKET] Driver going ONLINE - Starting connection...")
             isOnline = true
             updateOnlineStatus()
+            Log.i(TAG, "[WEBSOCKET] Driver is now ONLINE - WebSocket should connect")
         } else if (isOnline) {
             // Go offline
+            Log.d(TAG, "[WEBSOCKET] Driver going OFFLINE - Disconnecting...")
             isOnline = false
             updateOfflineStatus()
+            Log.i(TAG, "[WEBSOCKET] Driver is now OFFLINE - WebSocket should disconnect")
         }
     }
     
     private fun updateOnlineStatus() {
+        Log.d(TAG, "[UI] Updating UI to ONLINE state")
         binding.apply {
             tvStatus.text = "You are Online"
             tvStatus.setTextColor(resources.getColor(R.color.primary, null))
@@ -315,9 +325,18 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             // Start showing trip requests every 5 seconds
             startTripRequestTimer()
         }
+        
+        // TODO: Connect to WebSocket here
+        // Example:
+        // val locationService = LocationTrackingService.getInstance(requireContext())
+        // locationService.startTracking(object : WebSocketListener { ... })
+        
+        Log.i(TAG, "[WEBSOCKET] TODO: Implement WebSocket connection in updateOnlineStatus()")
+        Log.i(TAG, "[STATUS] UI updated to ONLINE - Animations started")
     }
     
     private fun updateOfflineStatus() {
+        Log.d(TAG, "[UI] Updating UI to OFFLINE state")
         binding.apply {
             tvStatus.text = "You are Offline"
             tvStatus.setTextColor(resources.getColor(R.color.text_secondary, null))
@@ -339,6 +358,14 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             // Stop trip request timer
             stopTripRequestTimer()
         }
+        
+        // TODO: Disconnect from WebSocket here
+        // Example:
+        // val locationService = LocationTrackingService.getInstance(requireContext())
+        // locationService.stopTracking()
+        
+        Log.i(TAG, "[WEBSOCKET] TODO: Implement WebSocket disconnection in updateOfflineStatus()")
+        Log.i(TAG, "[STATUS] UI updated to OFFLINE - Animations stopped")
     }
     
     private fun startPulseAnimations() {
@@ -382,16 +409,23 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     }
     
     private fun stopPulseAnimations() {
+        // Cancel animators
         outerPulseAnimator?.cancel()
         outerPulseAnimator = null
         innerPulseAnimator?.cancel()
         innerPulseAnimator = null
         
-        // Reset scales
-        binding.outerCircle.scaleX = 1f
-        binding.outerCircle.scaleY = 1f
-        binding.innerCircle.scaleX = 1f
-        binding.innerCircle.scaleY = 1f
+        // Reset scales only if binding is available (prevents crash in onDestroyView)
+        try {
+            if (_binding != null) {
+                binding.outerCircle.scaleX = 1f
+                binding.outerCircle.scaleY = 1f
+                binding.innerCircle.scaleX = 1f
+                binding.innerCircle.scaleY = 1f
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "[ANIMATION] Could not reset pulse animation scales: ${e.message}")
+        }
     }
     
     private fun startTripRequestTimer() {
@@ -450,9 +484,16 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     }
     
     override fun onDestroyView() {
-        super.onDestroyView()
+        Log.d(TAG, "[LIFECYCLE] onDestroyView - Cleaning up resources")
+        
+        // Stop animations and timers before view is destroyed
         stopPulseAnimations()
         stopTripRequestTimer()
         isShowingTripRequest = false
+        
+        // Call super AFTER cleanup to ensure binding is still available
+        super.onDestroyView()
+        
+        Log.d(TAG, "[LIFECYCLE] onDestroyView completed")
     }
 }

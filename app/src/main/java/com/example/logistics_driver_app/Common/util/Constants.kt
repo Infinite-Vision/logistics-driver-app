@@ -10,6 +10,12 @@ object Constants {
     const val BASE_URL = "http://43.205.235.73:8080/api/v1/"
     const val API_TIMEOUT = 30L // seconds
     
+    // WebSocket Configuration
+    const val WS_BASE_URL = "ws://43.205.235.73:8080"
+    const val WS_DRIVER_PATH = "/ws/driver"
+    const val WS_DRIVER_LOCATION_PATH = "/ws/driver/location"
+    const val LOCATION_UPDATE_INTERVAL = 30L // seconds
+    
     // API Endpoints
     object Endpoints {
         const val SEND_OTP = "auth/otp/request"

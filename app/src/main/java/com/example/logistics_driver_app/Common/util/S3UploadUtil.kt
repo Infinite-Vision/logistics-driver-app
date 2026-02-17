@@ -12,6 +12,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility
 import com.amazonaws.regions.Region
 import com.amazonaws.regions.Regions
 import com.amazonaws.services.s3.AmazonS3Client
+import com.example.logistics_driver_app.BuildConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -25,10 +26,11 @@ import kotlin.coroutines.suspendCoroutine
 object S3UploadUtil {
     
     private const val TAG = "S3UploadUtil"
-    private const val AWS_ACCESS_KEY = "REDACTED_ACCESS_KEY"
-    private const val AWS_SECRET_KEY = "REDACTED_SECRET_KEY"
-    private const val S3_BUCKET_NAME = "fleet-services-app"
-    private const val S3_REGION_NAME = "ap-south-1" // Mumbai region
+    // AWS credentials are loaded from aws.properties file via BuildConfig
+    private val AWS_ACCESS_KEY = BuildConfig.AWS_ACCESS_KEY
+    private val AWS_SECRET_KEY = BuildConfig.AWS_SECRET_KEY
+    private val S3_BUCKET_NAME = BuildConfig.S3_BUCKET_NAME
+    private val S3_REGION_NAME = BuildConfig.S3_REGION_NAME
     
     private lateinit var s3Client: AmazonS3Client
     private lateinit var transferUtility: TransferUtility

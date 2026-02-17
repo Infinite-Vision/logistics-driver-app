@@ -1,7 +1,9 @@
 package com.example.logistics_driver_app
 
+import android.Manifest
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.navigation.NavController
@@ -10,6 +12,7 @@ import com.example.logistics_driver_app.databinding.ActivityMainBinding
 import com.example.logistics_driver_app.data.local.preferences.PreferencesManager
 import com.example.logistics_driver_app.Common.util.S3UploadUtil
 import com.example.logistics_driver_app.Common.util.SharedPreference
+import com.example.logistics_driver_app.Common.util.LocationPermissionHelper
 
 /**
  * Main Activity for the Logistics Driver App.
@@ -25,6 +28,36 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
     private lateinit var preferencesManager: PreferencesManager
+    
+    // Flag to track if location check should be done after navigation setup
+    private var shouldCheckLocationAfterNavigation = true
+
+    // Permission launcher for location permissions
+    private val requestPermissionsLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>> = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results: Map<String, Boolean> ->
+        val fineLocationGranted: Boolean = results[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        val coarseLocationGranted: Boolean = results[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+        
+        if (fineLocationGranted && coarseLocationGranted) {
+            Log.d(TAG, "[PERMISSION] Foreground location permissions granted")
+            // After foreground permissions granted, request background permission
+            LocationPermissionHelper.requestBackgroundLocationPermission(
+                this,
+                requestPermissionsLauncher
+            )
+        } else {
+            Log.w(TAG, "[PERMISSION] Foreground location permissions denied")
+            // Check if we should show rationale or if permission is permanently denied
+            if (LocationPermissionHelper.shouldShowPermissionRationale(this)) {
+                LocationPermissionHelper.showLocationPermissionRationale(this) {
+                    LocationPermissionHelper.requestForegroundLocationPermissions(requestPermissionsLauncher)
+                }
+            } else {
+                LocationPermissionHelper.showPermissionDeniedDialog(this)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -165,6 +198,47 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "[LIFECYCLE] onResume")
+        
+        // Check location permissions and settings when app comes to foreground
+        if (shouldCheckLocationAfterNavigation) {
+            shouldCheckLocationAfterNavigation = false
+            checkLocationPermissionsAndSettings()
+        }
+    }
+    
+    /**
+     * Check if location permissions are granted and location services are enabled.
+     * Prompt the user if either is missing.
+     */
+    private fun checkLocationPermissionsAndSettings() {
+        Log.d(TAG, "[PERMISSION] Checking location permissions and settings")
+        
+        // First check if location services are enabled
+        if (!LocationPermissionHelper.isLocationEnabled(this)) {
+            Log.w(TAG, "[PERMISSION] Location services are disabled")
+            LocationPermissionHelper.showEnableLocationDialog(this)
+            return
+        }
+        
+        // Check foreground location permissions
+        if (!LocationPermissionHelper.hasForegroundLocationPermission(this)) {
+            Log.w(TAG, "[PERMISSION] Foreground location permissions not granted")
+            LocationPermissionHelper.requestForegroundLocationPermissions(requestPermissionsLauncher)
+            return
+        }
+        
+        // Check background location permission (Android 10+)
+        if (!LocationPermissionHelper.hasBackgroundLocationPermission(this)) {
+            Log.w(TAG, "[PERMISSION] Background location permission not granted")
+            LocationPermissionHelper.requestBackgroundLocationPermission(
+                this,
+                requestPermissionsLauncher
+            )
+            return
+        }
+        
+        // All permissions granted and location enabled
+        Log.d(TAG, "[PERMISSION] All location permissions granted and location is enabled")
     }
     
     override fun onPause() {
