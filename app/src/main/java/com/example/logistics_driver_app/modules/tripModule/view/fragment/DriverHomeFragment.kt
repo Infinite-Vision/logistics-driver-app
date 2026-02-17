@@ -1,6 +1,11 @@
 package com.example.logistics_driver_app.modules.tripModule.view.fragment
 
 import android.animation.ObjectAnimator
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -14,6 +19,7 @@ import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.R
+import com.example.logistics_driver_app.data.service.DriverLocationService
 import com.example.logistics_driver_app.databinding.FragmentDriverHomeBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
 import com.example.logistics_driver_app.modules.tripModule.viewModel.DriverHomeViewModel
@@ -41,6 +47,37 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     private val tripRequestHandler = Handler(Looper.getMainLooper())
     private var tripRequestRunnable: Runnable? = null
     private var isShowingTripRequest = false
+    
+    // BroadcastReceivers for service events
+    private val driverOnlineReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i(TAG, "[BROADCAST] Driver went ONLINE")
+            isOnline = true
+            updateUIForOnlineState()
+        }
+    }
+    
+    private val driverOfflineReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i(TAG, "[BROADCAST] Driver went OFFLINE")
+            isOnline = false
+            updateUIForOfflineState()
+        }
+    }
+    
+    private val newOrderReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            Log.i(TAG, "[BROADCAST] New order received")
+            val orderId = intent?.getStringExtra("order_id")
+            val pickupAddress = intent?.getStringExtra("pickup_address")
+            val dropoffAddress = intent?.getStringExtra("dropoff_address")
+            
+            // Show trip request
+            if (orderId != null && !isShowingTripRequest) {
+                showTripRequestBottomSheet()
+            }
+        }
+    }
 
     override fun getViewBinding(
         inflater: LayoutInflater,
@@ -55,9 +92,54 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
         setupViews()
         setupObservers()
         setupSlider()
+        registerBroadcastReceivers()
+        
+        // Check if service is already running and restore state
+        isOnline = DriverLocationService.isDriverOnline(requireContext())
+        if (isOnline) {
+            Log.i(TAG, "[INIT] Service already running - restoring ONLINE state")
+            updateUIForOnlineState()
+        }
         
         // Fetch home summary data
         viewModel.fetchHomeSummary()
+    }
+    
+    /**
+     * Register broadcast receivers for service events
+     */
+    private fun registerBroadcastReceivers() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requireContext().registerReceiver(
+                driverOnlineReceiver,
+                IntentFilter("com.example.logistics_driver_app.DRIVER_ONLINE"),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+            requireContext().registerReceiver(
+                driverOfflineReceiver,
+                IntentFilter("com.example.logistics_driver_app.DRIVER_OFFLINE"),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+            requireContext().registerReceiver(
+                newOrderReceiver,
+                IntentFilter("com.example.logistics_driver_app.NEW_ORDER"),
+                Context.RECEIVER_NOT_EXPORTED
+            )
+        } else {
+            requireContext().registerReceiver(
+                driverOnlineReceiver,
+                IntentFilter("com.example.logistics_driver_app.DRIVER_ONLINE")
+            )
+            requireContext().registerReceiver(
+                driverOfflineReceiver,
+                IntentFilter("com.example.logistics_driver_app.DRIVER_OFFLINE")
+            )
+            requireContext().registerReceiver(
+                newOrderReceiver,
+                IntentFilter("com.example.logistics_driver_app.NEW_ORDER")
+            )
+        }
+        Log.d(TAG, "[BROADCAST] Receivers registered")
     }
 
     private fun setupViews() {
@@ -303,6 +385,19 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     }
     
     private fun updateOnlineStatus() {
+        Log.d(TAG, "[SERVICE] Starting DriverLocationService to go ONLINE")
+        
+        // Start foreground service
+        DriverLocationService.startService(requireContext())
+        
+        // UI will be updated when DRIVER_ONLINE broadcast is received
+        Log.i(TAG, "[WEBSOCKET] Service started - waiting for connection confirmation")
+    }
+    
+    /**
+     * Update UI to reflect online state (called from broadcast receiver)
+     */
+    private fun updateUIForOnlineState() {
         Log.d(TAG, "[UI] Updating UI to ONLINE state")
         binding.apply {
             tvStatus.text = "You are Online"
@@ -326,16 +421,23 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             startTripRequestTimer()
         }
         
-        // TODO: Connect to WebSocket here
-        // Example:
-        // val locationService = LocationTrackingService.getInstance(requireContext())
-        // locationService.startTracking(object : WebSocketListener { ... })
-        
-        Log.i(TAG, "[WEBSOCKET] TODO: Implement WebSocket connection in updateOnlineStatus()")
         Log.i(TAG, "[STATUS] UI updated to ONLINE - Animations started")
     }
     
     private fun updateOfflineStatus() {
+        Log.d(TAG, "[SERVICE] Stopping DriverLocationService to go OFFLINE")
+        
+        // Stop foreground service
+        DriverLocationService.stopService(requireContext())
+        
+        // UI will be updated when DRIVER_OFFLINE broadcast is received
+        Log.i(TAG, "[WEBSOCKET] Service stop requested - waiting for confirmation")
+    }
+    
+    /**
+     * Update UI to reflect offline state (called from broadcast receiver)
+     */
+    private fun updateUIForOfflineState() {
         Log.d(TAG, "[UI] Updating UI to OFFLINE state")
         binding.apply {
             tvStatus.text = "You are Offline"
@@ -359,12 +461,6 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             stopTripRequestTimer()
         }
         
-        // TODO: Disconnect from WebSocket here
-        // Example:
-        // val locationService = LocationTrackingService.getInstance(requireContext())
-        // locationService.stopTracking()
-        
-        Log.i(TAG, "[WEBSOCKET] TODO: Implement WebSocket disconnection in updateOfflineStatus()")
         Log.i(TAG, "[STATUS] UI updated to OFFLINE - Animations stopped")
     }
     
@@ -486,14 +582,27 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     override fun onDestroyView() {
         Log.d(TAG, "[LIFECYCLE] onDestroyView - Cleaning up resources")
         
+        // Unregister broadcast receivers
+        try {
+            requireContext().unregisterReceiver(driverOnlineReceiver)
+            requireContext().unregisterReceiver(driverOfflineReceiver)
+            requireContext().unregisterReceiver(newOrderReceiver)
+            Log.d(TAG, "[BROADCAST] Receivers unregistered")
+        } catch (e: Exception) {
+            Log.w(TAG, "[BROADCAST] Error unregistering receivers: ${e.message}")
+        }
+        
         // Stop animations and timers before view is destroyed
         stopPulseAnimations()
         stopTripRequestTimer()
         isShowingTripRequest = false
         
+        // NOTE: Service continues running in background even when view is destroyed
+        // User must explicitly go offline to stop the service
+        
         // Call super AFTER cleanup to ensure binding is still available
         super.onDestroyView()
         
-        Log.d(TAG, "[LIFECYCLE] onDestroyView completed")
+        Log.d(TAG, "[LIFECYCLE] onDestroyView completed - Service continues in background")
     }
 }
