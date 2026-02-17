@@ -148,4 +148,16 @@ interface ApiService {
     suspend fun getVehicleFormOptions(
         @Header("Authorization") token: String
     ): Response<ApiResponse<VehicleFormOptionsResponse>>
+    
+    // ============= Driver Home Module =============
+    
+    /**
+     * 8.1 Get Driver Home Summary
+     * Get driver's home screen data including status, today's summary, and eligibility to go online.
+     * Endpoint: GET /api/v1/driver/home/summary
+     */
+    @GET("driver/home/summary")
+    suspend fun getDriverHomeSummary(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<DriverHomeSummaryResponse>>
 }

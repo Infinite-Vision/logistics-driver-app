@@ -71,7 +71,7 @@
     <string name="error_invalid_email">कृपया एक मान्य ईमेल पता दर्ज करें</string>
     <string name="error_invalid_vehicle_number">कृपया एक मान्य वाहन नंबर दर्ज करें</string>
     <string name="error_invalid_pincode">कृपया 6 अंकों का मान्य पिनकोड दर्ज करें</string>
-    <string name="error_required_.field">यह फ़ील्ड आवश्यक है</string>
+    <string name="error_required_field">यह फ़ील्ड आवश्यक है</string>
     <string name="error_network">नेटवर्क त्रुटि। कृपया पुनः प्रयास करें</string>
     <string name="error_something_wrong">कुछ गलत हो गया। कृपया पुनः प्रयास करें</string>
     <string name="please_select_language">कृपया एक भाषा चुनें</string>

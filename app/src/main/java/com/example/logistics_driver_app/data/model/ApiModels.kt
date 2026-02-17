@@ -298,3 +298,72 @@ enum class VerificationStatus(val status: String) {
     VERIFIED("VERIFIED"),
     REJECTED("REJECTED")
 }
+
+// ============= Driver Home Module =============
+
+/**
+ * Driver Home Summary response
+ */
+data class DriverHomeSummaryResponse(
+    @SerializedName("driverStatus")
+    val driverStatus: String,
+    @SerializedName("canGoOnline")
+    val canGoOnline: Boolean,
+    @SerializedName("block")
+    val block: BlockInfo?,
+    @SerializedName("todaySummary")
+    val todaySummary: TodaySummary
+)
+
+/**
+ * Block information when driver cannot go online
+ */
+data class BlockInfo(
+    @SerializedName("reason")
+    val reason: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("redirectTo")
+    val redirectTo: String
+)
+
+/**
+ * Today's summary metrics
+ */
+data class TodaySummary(
+    @SerializedName("earnings")
+    val earnings: Double,
+    @SerializedName("trips")
+    val trips: Int,
+    @SerializedName("hoursOnline")
+    val hoursOnline: Double,
+    @SerializedName("distanceKm")
+    val distanceKm: Double
+)
+
+/**
+ * Driver operational status enum
+ */
+enum class DriverOperationalStatus(val status: String) {
+    OFFLINE("OFFLINE"),
+    ONLINE("ONLINE"),
+    ON_TRIP("ON_TRIP"),
+    BLOCKED("BLOCKED")
+}
+
+/**
+ * Block reason enum
+ */
+enum class BlockReason(val reason: String) {
+    LOW_BALANCE("LOW_BALANCE"),
+    DOCUMENT_EXPIRED("DOCUMENT_EXPIRED"),
+    ADMIN_BLOCKED("ADMIN_BLOCKED")
+}
+
+/**
+ * Redirect target enum
+ */
+enum class RedirectTarget(val target: String) {
+    WALLET("WALLET"),
+    DOCUMENTS("DOCUMENTS")
+}

@@ -16,6 +16,7 @@ import com.example.logistics_driver_app.Common.util.ViewUtils
 import com.example.logistics_driver_app.R
 import com.example.logistics_driver_app.databinding.FragmentVehicleDetailsBinding
 import com.example.logistics_driver_app.databinding.IncludeProgressStepsBinding
+import com.example.logistics_driver_app.data.model.FormOption
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
 import com.example.logistics_driver_app.modules.loginModule.viewModel.OnboardingViewModel
 import com.google.android.material.card.MaterialCardView
@@ -35,6 +36,12 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     private var rcUri: android.net.Uri? = null
     private var selectedVehicleType: String? = null
     private var selectedBodyType: String? = null
+    private var selectedBodySpec: String? = null
+    
+    // API Data
+    private var vehicleTypeOptions: List<FormOption> = emptyList()
+    private var bodyTypeOptions: List<FormOption> = emptyList()
+    private var bodySpecOptions: List<FormOption> = emptyList()
     
     private val rcPickerLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
@@ -70,6 +77,9 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
             setupProgressSteps()
             setupViews()
             observeViewModel()
+            
+            // Fetch vehicle form options from API
+            viewModel.getVehicleFormOptions()
             
             android.util.Log.d("VehicleDetailsFragment", "=== onViewCreated completed successfully ===")
         } catch (e: Exception) {
@@ -128,16 +138,12 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
             // Body Type Cards
             setupBodyTypeCards()
             
-            // Body Details/Capacity dropdown - API enum values
-            val capacities = arrayOf(
-                "8 ft / 1.5 ton",
-                "14 ft / 3.5 ton",
-                "17 ft / 4.5 ton",
-                "19 ft / 6 ton"
-            )
-            val capacityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, capacities)
-            actvBodyDetails.setAdapter(capacityAdapter)
-            actvBodyDetails.setOnItemClickListener { _, _, _, _ ->
+            // Body Details/Capacity dropdown - Will be populated from API
+            actvBodyDetails.setOnItemClickListener { parent, _, position, _ ->
+                // Get the selected FormOption
+                if (bodySpecOptions.isNotEmpty() && position < bodySpecOptions.size) {
+                    selectedBodySpec = bodySpecOptions[position].code
+                }
                 updateContinueButton()
             }
             
@@ -158,16 +164,22 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     
     private fun setupVehicleTypeCards() {
         binding.apply {
+            // Vehicle type cards are static in the layout
+            // We'll map them to API codes when they're clicked
             val vehicleCards = listOf(
-                cardTruck to "Truck",
-                cardMiniTruck to "Mini Truck",
-                card3Wheeler to "3-Wheeler",
-                cardPickup to "Pickup"
+                cardTruck,
+                cardMiniTruck,
+                card3Wheeler,
+                cardPickup
             )
             
-            vehicleCards.forEach { (card, type) ->
+            vehicleCards.forEachIndexed { index, card ->
                 card.setOnClickListener {
-                    selectVehicleType(card, type)
+                    // Get the corresponding code from API options
+                    if (vehicleTypeOptions.isNotEmpty() && index < vehicleTypeOptions.size) {
+                        val option = vehicleTypeOptions[index]
+                        selectVehicleType(card, option.code)
+                    }
                     // Show body details section when vehicle type is selected
                     showBodyDetailsSection()
                 }
@@ -177,15 +189,29 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     
     private fun setupBodyTypeCards() {
         binding.apply {
+            // Body type cards are static in the layout
+            // We'll map them to API codes when they're clicked
             val bodyCards = listOf(
-                cardClosed to "Closed",
-                cardOpen to "Open",
-                cardSemiOpen to "Semi-Open"
+                cardClosed,
+                cardOpen,
+                cardSemiOpen
             )
             
-            bodyCards.forEach { (card, type) ->
+            bodyCards.forEachIndexed { index, card ->
                 card.setOnClickListener {
-                    selectBodyType(card, type)
+                    // Map card to API code based on order
+                    // API returns: OPEN, CLOSED, SEMI_OPEN (alphabetically)
+                    // Layout order: CLOSED, OPEN, SEMI_OPEN
+                    val mappedIndex = when (index) {
+                        0 -> 1 // cardClosed -> CLOSED
+                        1 -> 0 // cardOpen -> OPEN
+                        2 -> 2 // cardSemiOpen -> SEMI_OPEN
+                        else -> index
+                    }
+                    if (bodyTypeOptions.isNotEmpty() && mappedIndex < bodyTypeOptions.size) {
+                        val option = bodyTypeOptions[mappedIndex]
+                        selectBodyType(card, option.code)
+                    }
                 }
             }
         }
@@ -229,11 +255,26 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
         binding.llBodyDetailsContainer.visibility = View.VISIBLE
     }
     
+    private fun populateBodySpecsDropdown() {
+        if (bodySpecOptions.isEmpty()) {
+            return
+        }
+        
+        binding.apply {
+            val displayNames = bodySpecOptions.map { it.displayName }
+            val adapter = ArrayAdapter(
+                requireContext(),
+                android.R.layout.simple_dropdown_item_1line,
+                displayNames
+            )
+            actvBodyDetails.setAdapter(adapter)
+        }
+    }
+    
     private fun validateForm(): Boolean {
         binding.apply {
             val vehicleNumber = etVehicleNumber.text.toString().trim()
             val city = actvCity.text.toString()
-            val bodyDetails = actvBodyDetails.text.toString()
             
             if (vehicleNumber.isEmpty()) {
                 Bakery.showToast(requireContext(), "Please enter vehicle number")
@@ -260,7 +301,7 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
                 return false
             }
             
-            if (bodyDetails.isEmpty()) {
+            if (selectedBodySpec == null || selectedBodySpec!!.isEmpty()) {
                 Bakery.showToast(requireContext(), "Please select capacity/size")
                 return false
             }
@@ -273,11 +314,10 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
         binding.apply {
             val vehicleNumber = etVehicleNumber.text.toString().trim()
             val city = actvCity.text.toString()
-            val bodyDetails = actvBodyDetails.text.toString()
             
             val isComplete = vehicleNumber.isNotEmpty() && rcUri != null &&
                            city.isNotEmpty() && selectedVehicleType != null &&
-                           selectedBodyType != null && bodyDetails.isNotEmpty()
+                           selectedBodyType != null && selectedBodySpec != null
             
             if (isComplete) {
                 ViewUtils.enable(btnContinueFixed)
@@ -291,24 +331,14 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
         binding.apply {
             val vehicleNumber = etVehicleNumber.text.toString().trim()
             val city = actvCity.text.toString()
-            val bodyDetailsDisplay = actvBodyDetails.text.toString()
             
-            // Convert display value to API enum format
-            val bodyDetails = when (bodyDetailsDisplay) {
-                "8 ft / 1.5 ton" -> "EIGHT_FT_1_5_TON"
-                "14 ft / 3.5 ton" -> "FOURTEEN_FT_3_5_TON"
-                "17 ft / 4.5 ton" -> "SEVENTEEN_FT_4_5_TON"
-                "19 ft / 6 ton" -> "NINETEEN_FT_6_TON"
-                else -> bodyDetailsDisplay
-            }
-            
-            // Save to SharedPreferences
+            // Save to SharedPreferences using codes from API
             sharedPreference.saveVehicleNumber(vehicleNumber)
             sharedPreference.saveVehicleRCUri(rcUri.toString())
             sharedPreference.saveVehicleCity(city)
             sharedPreference.saveVehicleType(selectedVehicleType ?: "")
             sharedPreference.saveBodyType(selectedBodyType ?: "")
-            sharedPreference.saveBodyCapacity(bodyDetails)
+            sharedPreference.saveBodyCapacity(selectedBodySpec ?: "")
         }
     }
     
@@ -316,31 +346,11 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
         binding.apply {
             val vehicleNumber = etVehicleNumber.text.toString().trim()
             val city = actvCity.text.toString()
-            val bodyDetailsDisplay = actvBodyDetails.text.toString()
             
-            // Convert display values to API enum formats
-            val bodyDetailsEnum = when (bodyDetailsDisplay) {
-                "8 ft / 1.5 ton" -> "EIGHT_FT_1_5_TON"
-                "14 ft / 3.5 ton" -> "FOURTEEN_FT_3_5_TON"
-                "17 ft / 4.5 ton" -> "SEVENTEEN_FT_4_5_TON"
-                "19 ft / 6 ton" -> "NINETEEN_FT_6_TON"
-                else -> bodyDetailsDisplay
-            }
-            
-            val vehicleTypeEnum = when (selectedVehicleType) {
-                "Truck" -> "TRUCK"
-                "Mini Truck" -> "MINI_TRUCK"
-                "3-Wheeler" -> "THREE_WHEELER"
-                "Pickup" -> "PICKUP"
-                else -> selectedVehicleType ?: ""
-            }
-            
-            val bodyTypeEnum = when (selectedBodyType) {
-                "Open" -> "OPEN"
-                "Closed" -> "CLOSED"
-                "Semi-Open" -> "SEMI_OPEN"
-                else -> selectedBodyType ?: ""
-            }
+            // Use codes from API directly (no conversion needed)
+            val vehicleTypeCode = selectedVehicleType ?: ""
+            val bodyTypeCode = selectedBodyType ?: ""
+            val bodySpecCode = selectedBodySpec ?: ""
             
             // Show loading
             Bakery.showToast(requireContext(), "Uploading RC document...")
@@ -362,9 +372,9 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
                             // Call API with S3 URL
                             viewModel.saveVehicle(
                                 registrationNumber = vehicleNumber,
-                                vehicleType = vehicleTypeEnum,
-                                bodyType = bodyTypeEnum,
-                                bodySpec = bodyDetailsEnum,
+                                vehicleType = vehicleTypeCode,
+                                bodyType = bodyTypeCode,
+                                bodySpec = bodySpecCode,
                                 rcUrl = rcUrl,
                                 insuranceUrl = "", // Optional
                                 pucUrl = "" // Optional
@@ -389,6 +399,20 @@ class VehicleDetailsFragment : BaseFragment<FragmentVehicleDetailsBinding>() {
     }
     
     private fun observeViewModel() {
+        // Observe vehicle form options
+        viewModel.vehicleFormOptions.observe(viewLifecycleOwner) { options ->
+            options?.let {
+                vehicleTypeOptions = it.vehicleTypes
+                bodyTypeOptions = it.bodyTypes
+                bodySpecOptions = it.bodySpecs
+                
+                // Populate body specs dropdown
+                populateBodySpecsDropdown()
+                
+                android.util.Log.d("VehicleDetailsFragment", "Vehicle form options loaded: ${vehicleTypeOptions.size} types, ${bodyTypeOptions.size} body types, ${bodySpecOptions.size} specs")
+            }
+        }
+        
         viewModel.vehicleSaveSuccess.observe(viewLifecycleOwner) { success ->
             if (success) {
                 Bakery.showToast(requireContext(), "Vehicle details saved successfully")

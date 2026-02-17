@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/trip_navigation"
+    app:startDestination="@id/driverHomeFragment">
+
+    <!-- Driver Home - Go Online/Offline -->
+    <fragment
+        android:id="@+id/driverHomeFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.DriverHomeFragment"
+        android:label="Home"
+        tools:layout="@layout/fragment_driver_home">
+        
+        <action
+            android:id="@+id/action_driverHome_to_searchingTrips"
+            app:destination="@id/searchingTripsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_driverHome_to_pickupArrival"
+            app:destination="@id/pickupArrivalFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_driverHome_to_menu"
+            app:destination="@id/menuFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Searching for Trips -->
+    <fragment
+        android:id="@+id/searchingTripsFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.SearchingTripsFragment"
+        android:label="Searching Trips"
+        tools:layout="@layout/fragment_searching_trips">
+        
+        <action
+            android:id="@+id/action_searchingTrips_to_tripRequest"
+            app:destination="@id/tripRequestFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_searchingTrips_to_menu"
+            app:destination="@id/menuFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Trip Request - Accept/Decline -->
+    <fragment
+        android:id="@+id/tripRequestFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.TripRequestFragment"
+        android:label="Trip Request"
+        tools:layout="@layout/fragment_trip_request">
+        
+        <action
+            android:id="@+id/action_tripRequest_to_pickupArrival"
+            app:destination="@id/pickupArrivalFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_tripRequest_to_menu"
+            app:destination="@id/menuFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Pickup Arrival Screen (t1-t3: Waiting for customer + OTP) -->
+    <fragment
+        android:id="@+id/pickupArrivalFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.PickupArrivalFragment"
+        android:label="Pickup Arrival"
+        tools:layout="@layout/fragment_pickup_arrival">
+        
+        <action
+            android:id="@+id/action_pickupArrival_to_tripActive"
+            app:destination="@id/tripActiveFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_pickupArrival_to_tripInfoSheet"
+            app:destination="@id/tripInfoSheetFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Trip Active - Heading to Drop (t4-t5) -->
+    <fragment
+        android:id="@+id/tripActiveFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.TripActiveFragment"
+        android:label="Active Trip"
+        tools:layout="@layout/fragment_trip_active">
+        
+        <action
+            android:id="@+id/action_tripActive_to_dropArrival"
+            app:destination="@id/dropArrivalFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_tripActive_to_tripInfoSheet"
+            app:destination="@id/tripInfoSheetFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Drop Arrival Screen -->
+    <fragment
+        android:id="@+id/dropArrivalFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.DropArrivalFragment"
+        android:label="Drop Arrival"
+        tools:layout="@layout/fragment_drop_arrival">
+        
+        <action
+            android:id="@+id/action_dropArrival_to_payment"
+            app:destination="@id/paymentCollectionFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        
+        <action
+            android:id="@+id/action_dropArrival_to_tripCompleted"
+            app:destination="@id/tripCompletedFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Trip Info Sheet -->
+    <fragment
+        android:id="@+id/tripInfoSheetFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.TripInfoSheetFragment"
+        android:label="Trip Details"
+        tools:layout="@layout/fragment_trip_info_sheet">
+        
+        <action
+            android:id="@+id/action_tripInfoSheet_to_cancelTrip"
+            app:destination="@id/cancelTripFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Trip Completed -->
+    <fragment
+        android:id="@+id/tripCompletedFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.TripCompletedFragment"
+        android:label="Trip Completed"
+        tools:layout="@layout/fragment_trip_completed">
+        
+        <action
+            android:id="@+id/action_tripCompleted_to_driverHome"
+            app:destination="@id/driverHomeFragment"
+            app:popUpTo="@id/driverHomeFragment"
+            app:popUpToInclusive="true" />
+        
+        <action
+            android:id="@+id/action_tripCompleted_to_menu"
+            app:destination="@id/menuFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <!-- Payment Collection -->
+    <fragment
+        android:id="@+id/paymentCollectionFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.PaymentCollectionFragment"
+        android:label="Collect Payment"
+        tools:layout="@layout/fragment_payment_collection" />
+
+    <!-- Cancel Trip -->
+    <fragment
+        android:id="@+id/cancelTripFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.CancelTripFragment"
+        android:label="Cancel Trip"
+        tools:layout="@layout/fragment_cancel_trip">
+        
+        <action
+            android:id="@+id/action_cancelTrip_to_tripActive"
+            app:destination="@id/tripActiveFragment"
+            app:popUpTo="@id/tripActiveFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Menu -->
+    <fragment
+        android:id="@+id/menuFragment"
+        android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.MenuFragment"
+        android:label="Menu"
+        tools:layout="@layout/fragment_menu" />
+
+</navigation>

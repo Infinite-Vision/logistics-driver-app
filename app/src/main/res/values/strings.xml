@@ -109,4 +109,99 @@
     <string name="menu_transform">Transform</string>
     <string name="menu_reflow">Reflow</string>
     <string name="menu_slideshow">Slideshow</string>
+
+    <!-- Trip Module Strings -->
+    <!-- Trip Status -->
+    <string name="trip_assigned">Trip Assigned</string>
+    <string name="heading_to_pickup">Heading to Pickup</string>
+    <string name="arrived_at_pickup">Arrived at Pickup</string>
+    <string name="trip_started">Trip Started</string>
+    <string name="heading_to_drop">Heading to Drop</string>
+    <string name="arrived_at_drop">Arrived at Drop</string>
+    <string name="trip_completed">Trip Completed</string>
+    <string name="trip_cancelled">Trip Cancelled</string>
+    
+    <!-- Trip Actions -->
+    <string name="start_navigation">Start Navigation</string>
+    <string name="mark_arrived">Mark Arrived</string>
+    <string name="start_trip">Start Trip</string>
+    <string name="complete_trip">Complete Trip</string>
+    <string name="collect_payment">Collect Payment</string>
+    <string name="view_details">View Details</string>
+    <string name="call_customer">Call Customer</string>
+    <string name="cancel_trip">Cancel Trip</string>
+    
+    <!-- Trip Info -->
+    <string name="order_id">Order ID</string>
+    <string name="pickup_location">Pickup Location</string>
+    <string name="drop_location">Drop Location</string>
+    <string name="customer_name">Customer Name</string>
+    <string name="customer_phone">Customer Phone</string>
+    <string name="item_description">Item Description</string>
+    <string name="distance">Distance</string>
+    <string name="estimated_time">Estimated Time</string>
+    <string name="trip_amount">Trip Amount</string>
+    <string name="payment_mode">Payment Mode</string>
+    <string name="cash">Cash</string>
+    <string name="online">Online</string>
+    <string name="pickup_otp">Pickup OTP</string>
+    <string name="drop_otp">Drop OTP</string>
+    <string name="enter_otp">Enter OTP</string>
+    <string name="verify_otp">Verify OTP</string>
+    
+    <!-- Trip Details -->
+    <string name="trip_details">Trip Details</string>
+    <string name="pickup_details">Pickup Details</string>
+    <string name="drop_details">Drop Details</string>
+    <string name="contact_info">Contact Information</string>
+    <string name="delivery_notes">Delivery Notes</string>
+    
+    <!-- Payment -->
+    <string name="payment_details">Payment Details</string>
+    <string name="amount_to_collect">Amount to Collect</string>
+    <string name="payment_collected">Payment Collected</string>
+    <string name="confirm_payment">Confirm Payment</string>
+    <string name="cash_payment">Cash Payment</string>
+    <string name="online_payment">Online Payment</string>
+    <string name="payment_pending">Payment Pending</string>
+    <string name="payment_success">Payment Successful</string>
+    
+    <!-- Cancellation -->
+    <string name="cancel_reason_title">Select Cancellation Reason</string>
+    <string name="cancel_reason_customer_not_available">Customer not available</string>
+    <string name="cancel_reason_wrong_address">Wrong address</string>
+    <string name="cancel_reason_vehicle_breakdown">Vehicle breakdown</string>
+    <string name="cancel_reason_customer_cancelled">Customer cancelled</string>
+    <string name="cancel_reason_traffic">Traffic issue</string>
+    <string name="cancel_reason_other">Other</string>
+    <string name="additional_notes">Additional Notes (Optional)</string>
+    <string name="submit_cancellation">Submit Cancellation</string>
+    <string name="cancel_confirmation_title">Cancel Trip?</string>
+    <string name="cancel_confirmation_message">Are you sure you want to cancel this trip?</string>
+    
+    <!-- Menu -->
+    <string name="menu_earnings">Earnings</string>
+    <string name="menu_trips">Trips</string>
+    <string name="menu_support">Support</string>
+    <string name="today_earnings">Today\'s Earnings</string>
+    <string name="total_trips">Total Trips</string>
+    <string name="completed_trips">Completed Trips</string>
+    
+    <!-- Messages -->
+    <string name="trip_started_message">Trip has been started successfully</string>
+    <string name="trip_completed_message">Trip completed successfully! Well done!</string>
+    <string name="trip_cancelled_message">Trip has been cancelled</string>
+    <string name="payment_collected_message">Payment collected successfully</string>
+    <string name="otp_verified">OTP Verified Successfully</string>
+    <string name="invalid_otp">Invalid OTP. Please try again</string>
+    <string name="navigation_started">Navigation started</string>
+    
+    <!-- Time and Distance -->
+    <string name="km_away">%s km away</string>
+    <string name="minutes_away">%s mins away</string>
+    <string name="arriving_in">Arriving in %s</string>
+    
+    <!-- Formats -->
+    <string name="rupee_amount">₹%s</string>
+    <string name="order_id_format">#%s</string>
 </resources>

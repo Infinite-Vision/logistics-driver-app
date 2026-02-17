@@ -164,6 +164,18 @@
         android:id="@+id/verificationProgressFragment"
         android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.VerificationProgressFragment"
         android:label="Verification in Progress"
-        tools:layout="@layout/fragment_verification_progress" />
+        tools:layout="@layout/fragment_verification_progress">
+        
+        <action
+            android:id="@+id/action_verificationProgress_to_tripHome"
+            app:destination="@id/trip_navigation"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/auth_navigation"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <!-- Include Trip Navigation Graph -->
+    <include app:graph="@navigation/trip_navigation" />
 
 </navigation>

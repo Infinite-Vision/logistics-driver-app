@@ -41,15 +41,9 @@ class VerificationProgressFragment : BaseFragment<FragmentVerificationProgressBi
                 ).show()
             }
             
-            // Skip to Home (Demo only)
+            // Skip to Home (Demo only) - Navigate to Trip Home Screen
             tvSkipDemo.setOnClickListener {
-                // TODO: Navigate to MainActivity or Home Screen
-                // For now, just show a message
-                android.widget.Toast.makeText(
-                    requireContext(),
-                    "Demo: Would navigate to Home Screen",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                findNavController().navigate(R.id.action_verificationProgress_to_tripHome)
             }
         }
     }
