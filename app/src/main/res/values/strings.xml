@@ -10,6 +10,7 @@
     <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="back">Back</string>
+    <string name="close">Close</string>
     <string name="change">Change</string>
     <string name="resend">Resend</string>
     <string name="india">India</string>
@@ -180,9 +181,11 @@
     <string name="cancel_confirmation_message">Are you sure you want to cancel this trip?</string>
     
     <!-- Menu -->
-    <string name="menu_earnings">Earnings</string>
-    <string name="menu_trips">Trips</string>
+    <string name="menu_earnings">My Earnings</string>
+    <string name="menu_trips">Trip History</string>
     <string name="menu_support">Support</string>
+    <string name="menu_bank_details">Bank Details</string>
+    <string name="menu_language">Language</string>
     <string name="today_earnings">Today\'s Earnings</string>
     <string name="total_trips">Total Trips</string>
     <string name="completed_trips">Completed Trips</string>

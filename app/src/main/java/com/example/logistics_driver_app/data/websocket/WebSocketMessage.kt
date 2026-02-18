@@ -8,6 +8,7 @@ import com.google.gson.annotations.SerializedName
 object MessageType {
     const val LOCATION = "LOCATION"
     const val ACK = "ACK"
+    const val CONNECTED = "CONNECTED"
     const val NEW_ORDER = "NEW_ORDER"
     const val ERROR = "ERROR"
 }
@@ -65,7 +66,10 @@ data class NewOrderPayload(
     val estimatedFare: Double,
     
     @SerializedName("helperRequired")
-    val helperRequired: Boolean
+    val helperRequired: Boolean,
+    
+    @SerializedName("customerName")
+    val customerName: String? = null
 )
 
 /**

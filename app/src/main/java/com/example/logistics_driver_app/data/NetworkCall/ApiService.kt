@@ -160,4 +160,103 @@ interface ApiService {
     suspend fun getDriverHomeSummary(
         @Header("Authorization") token: String
     ): Response<ApiResponse<DriverHomeSummaryResponse>>
+    
+    // ============= Driver Trip Flow Module =============
+    
+    /**
+     * 9.1 Accept Order
+     * Accept an offered order.
+     * Endpoint: POST /api/v1/driver/orders/{orderId}/accept
+     */
+    @POST("driver/orders/{orderId}/accept")
+    suspend fun acceptOrder(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long
+    ): Response<ApiResponse<TripAcceptResponse>>
+    
+    /**
+     * 9.2 Reject Order
+     * Reject an offered order.
+     * Endpoint: POST /api/v1/driver/orders/{orderId}/reject
+     * Returns: 204 No Content
+     */
+    @POST("driver/orders/{orderId}/reject")
+    suspend fun rejectOrder(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long
+    ): Response<Void>
+    
+    /**
+     * 9.3 Mark Arrived at Pickup
+     * Mark driver as arrived at pickup location (geofence check).
+     * Endpoint: POST /api/v1/driver/orders/{orderId}/arrived-pickup
+     */
+    @POST("driver/orders/{orderId}/arrived-pickup")
+    suspend fun arrivedAtPickup(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long,
+        @Body request: ArrivedAtPickupRequest
+    ): Response<ApiResponse<ArrivedAtPickupResponse>>
+    
+    /**
+     * 9.4 Start Trip (Confirm with OTP)
+     * Start the trip after verifying pickup OTP.
+     * Endpoint: POST /api/v1/driver/orders/{orderId}/start-trip/confirm
+     */
+    @POST("driver/orders/{orderId}/start-trip/confirm")
+    suspend fun startTrip(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long,
+        @Body request: StartTripRequest
+    ): Response<ApiResponse<StartTripResponse>>
+    
+    /**
+     * 9.5 Mark Arrived at Drop
+     * Mark driver as arrived at drop location (geofence check).
+     * Endpoint: POST /api/v1/driver/orders/{orderId}/arrived-drop
+     */
+    @POST("driver/orders/{orderId}/arrived-drop")
+    suspend fun arrivedAtDrop(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long,
+        @Body request: ArrivedAtDropRequest
+    ): Response<ApiResponse<ArrivedAtDropResponse>>
+    
+    /**
+     * 9.6 End Trip
+     * Complete the trip at drop location.
+     * Endpoint: POST /api/v1/driver/orders/{orderId}/end-trip
+     */
+    @POST("driver/orders/{orderId}/end-trip")
+    suspend fun endTrip(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long,
+        @Body request: EndTripRequest
+    ): Response<ApiResponse<EndTripResponse>>
+    
+    // ============= Driver Trip History Module =============
+    
+    /**
+     * 10.1 Get Trip List
+     * Get driver's trip history with filter and pagination.
+     * Endpoint: GET /api/v1/driver/trips?filter={today|thisWeek|thisMonth}&page=0&size=20
+     */
+    @GET("driver/trips")
+    suspend fun getTripList(
+        @Header("Authorization") token: String,
+        @Query("filter") filter: String,
+        @Query("page") page: Int = 0,
+        @Query("size") size: Int = 20
+    ): Response<ApiResponse<TripListResponse>>
+    
+    /**
+     * 10.2 Get Trip Detail
+     * Get detailed information about a specific trip.
+     * Endpoint: GET /api/v1/driver/trips/{orderId}
+     */
+    @GET("driver/trips/{orderId}")
+    suspend fun getTripDetail(
+        @Header("Authorization") token: String,
+        @Path("orderId") orderId: Long
+    ): Response<ApiResponse<TripDetailResponse>>
 }

@@ -1,5 +1,6 @@
 package com.example.logistics_driver_app.modules.tripModule.view.fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.Common.util.Bakery
+import com.example.logistics_driver_app.Common.util.SharedPreference
+import com.example.logistics_driver_app.MainActivity
 import com.example.logistics_driver_app.databinding.FragmentMenuBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
 import com.example.logistics_driver_app.modules.tripModule.viewModel.TripMenuViewModel
@@ -37,23 +40,26 @@ class MenuFragment : BaseFragment<FragmentMenuBinding>() {
 
     private fun setupViews() {
         binding.apply {
-            btnBack.setOnClickListener {
+            btnClose.setOnClickListener {
                 findNavController().navigateUp()
             }
 
             btnEarnings.setOnClickListener {
-                Bakery.showToast(requireContext(), "Earnings clicked")
+                Bakery.showToast(requireContext(), "My Earnings clicked")
                 viewModel.onMenuItemClicked(TripMenuViewModel.MenuAction.EARNINGS)
             }
 
             btnTrips.setOnClickListener {
-                Bakery.showToast(requireContext(), "Trips clicked")
+                Bakery.showToast(requireContext(), "Trip History clicked")
                 viewModel.onMenuItemClicked(TripMenuViewModel.MenuAction.PROFILE)
             }
 
-            btnSupport.setOnClickListener {
-                Bakery.showToast(requireContext(), "Support clicked")
-                viewModel.onMenuItemClicked(TripMenuViewModel.MenuAction.SUPPORT)
+            btnBankDetails.setOnClickListener {
+                Bakery.showToast(requireContext(), "Bank Details clicked")
+            }
+
+            btnLanguage.setOnClickListener {
+                Bakery.showToast(requireContext(), "Language clicked")
             }
 
             btnSettings.setOnClickListener {
@@ -62,26 +68,37 @@ class MenuFragment : BaseFragment<FragmentMenuBinding>() {
             }
 
             btnLogout.setOnClickListener {
-                Bakery.showToast(requireContext(), "Logout clicked")
-                viewModel.onMenuItemClicked(TripMenuViewModel.MenuAction.LOGOUT)
+                Bakery.showToast(requireContext(), "Logging out...")
+                viewModel.logout()
             }
         }
     }
 
     private fun loadData() {
-        // Mock data for now
+        // Load driver data from SharedPreference
+        val sharedPref = SharedPreference.getInstance(requireContext())
         binding.apply {
-            tvDriverName.text = "Driver Name"
-            tvDriverPhone.text = "+91 98765 43210"
-            tvTodayEarnings.text = "₹1,250"
-            tvTotalTrips.text = "45"
-            tvCompletedTrips.text = "42"
+            tvDriverName.text = sharedPref.getDriverName().ifEmpty { "Driver Name" }
+            tvDriverPhone.text = sharedPref.getPhoneNumber().ifEmpty { "+91 98765 43210" }
+            tvDriverRating.text = "4.8" // TODO: Load from API
+            tvTotalTrips.text = "1247 trips" // TODO: Load from API
         }
     }
 
     private fun observeViewModel() {
         viewModel.menuAction.observe(viewLifecycleOwner, Observer { action ->
             // Handle menu actions when needed
+        })
+
+        viewModel.logoutSuccess.observe(viewLifecycleOwner, Observer { success ->
+            if (success) {
+                // Restart MainActivity and navigate to language selection
+                // MainActivity will detect no session and go to language screen
+                val intent = Intent(requireContext(), MainActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                requireActivity().finish()
+            }
         })
     }
 }

@@ -69,6 +69,7 @@ class DriverWebSocketManager private constructor(private val context: Context) {
      * @param listener WebSocket event listener
      */
     fun connectDriverLocation(listener: WebSocketListener) {
+        Log.d(TAG, "connectDriverLocation called - Setting listener: ${listener.javaClass.simpleName}")
         this.listener = listener
         this.useLocationEndpoint = true
         connectWebSocket(WS_DRIVER_LOCATION_PATH)
@@ -79,7 +80,9 @@ class DriverWebSocketManager private constructor(private val context: Context) {
      */
     private fun connectWebSocket(path: String) {
         if (isConnected) {
-            Log.d(TAG, "WebSocket already connected")
+            Log.d(TAG, "WebSocket already connected - notifying listener")
+            // Still notify the listener that connection is ready
+            listener?.onConnected()
             return
         }
 
@@ -160,6 +163,18 @@ class DriverWebSocketManager private constructor(private val context: Context) {
             val payloadElement = jsonObject.get("payload")
 
             when (type) {
+                MessageType.CONNECTED -> {
+                    // Server sends CONNECTED message when connection is established
+                    val message = if (payloadElement != null && payloadElement.isJsonObject) {
+                        val payload = gson.fromJson(payloadElement, AckPayload::class.java)
+                        payload.message
+                    } else {
+                        "CONNECTED"
+                    }
+                    listener?.onAckReceived(message)
+                    Log.d(TAG, "CONNECTED: $message")
+                }
+                
                 MessageType.ACK -> {
                     val ackPayload = gson.fromJson(payloadElement, AckPayload::class.java)
                     listener?.onAckReceived(ackPayload.message)
@@ -168,8 +183,18 @@ class DriverWebSocketManager private constructor(private val context: Context) {
                 
                 MessageType.NEW_ORDER -> {
                     val orderPayload = gson.fromJson(payloadElement, NewOrderPayload::class.java)
-                    listener?.onNewOrderReceived(orderPayload)
-                    Log.d(TAG, "NEW_ORDER received: Order ID ${orderPayload.orderId}")
+                    Log.d(TAG, "NEW_ORDER received: Order ID ${orderPayload.orderId}, Listener is ${if (listener != null) "SET" else "NULL"}")
+                    if (listener != null) {
+                        Log.d(TAG, "Calling listener.onNewOrderReceived() on thread: ${Thread.currentThread().name}")
+                        try {
+                            listener?.onNewOrderReceived(orderPayload)
+                            Log.d(TAG, "Listener callback completed successfully")
+                        } catch (e: Exception) {
+                            Log.e(TAG, "ERROR in listener callback: ${e.message}", e)
+                        }
+                    } else {
+                        Log.e(TAG, "ERROR: Listener is NULL - cannot notify about new order!")
+                    }
                 }
                 
                 MessageType.ERROR -> {

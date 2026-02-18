@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fleet Service – WebSocket & Trip Flow (All Scenarios)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #1a1d23;
+      color: #e2e4e9;
+    }
+    h1 { font-size: 1.35rem; margin-bottom: 0.35em; color: #fff; }
+    .subtitle { color: #8b8f98; font-size: 0.9rem; margin-bottom: 20px; }
+    .scenarios {
+      padding: 16px;
+      background: #252830;
+      border-radius: 10px;
+      border: 1px solid #353842;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+    .scenarios h2 { font-size: 0.95rem; margin: 0 0 10px 0; color: #c5c8ce; }
+    .scenarios ul { margin: 0; padding-left: 20px; color: #9ca3af; line-height: 1.6; }
+    .scenarios code { background: #353842; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+    section {
+      margin-bottom: 24px;
+      padding: 20px;
+      background: #252830;
+      border-radius: 10px;
+      border: 1px solid #353842;
+    }
+    section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+      color: #c5c8ce;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #353842;
+    }
+    label { display: block; font-size: 12px; font-weight: 600; color: #8b8f98; margin-bottom: 4px; }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border: 1px solid #353842;
+      border-radius: 6px;
+      background: #1a1d23;
+      color: #e2e4e9;
+      font-size: 14px;
+    }
+    textarea { min-height: 56px; font-family: ui-monospace, monospace; resize: vertical; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > * { flex: 1 1 140px; }
+    .button-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.1); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-success { background: #22c55e; color: #fff; }
+    .btn-warning { background: #eab308; color: #1a1d23; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-secondary { background: #353842; color: #e2e4e9; }
+    .log-area {
+      margin-top: 12px;
+      border: 1px solid #353842;
+      padding: 12px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: #1a1d23;
+      border-radius: 6px;
+    }
+    .log-line {
+      margin-bottom: 6px;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border-left: 3px solid #3b82f6;
+    }
+    .log-line.sent { border-left-color: #22c55e; }
+    .log-line.error { border-left-color: #ef4444; }
+    .log-line time { color: #6b7280; font-size: 11px; }
+    .status {
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+    .status.connected { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
+    .status.error { background: #450a0a; color: #fca5a5; border: 1px solid #ef4444; }
+    .status.idle { background: #353842; color: #9ca3af; border: 1px solid #4b5563; }
+    .flow-steps { display: flex; flex-direction: column; gap: 10px; }
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #1a1d23;
+      border-radius: 8px;
+      border: 1px solid #353842;
+    }
+    .flow-step .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #353842;
+      color: #8b8f98;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .flow-step .step-desc { flex: 1; font-size: 13px; color: #9ca3af; }
+    .flow-step .step-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    code { background: #353842; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; }
+    .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #353842; flex-wrap: wrap; }
+    .tabs button {
+      padding: 10px 14px;
+      border: none;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .tabs button.active { color: #fff; border-bottom-color: #3b82f6; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .endpoint-choice label { display: inline-flex; align-items: center; margin-right: 16px; margin-bottom: 8px; cursor: pointer; font-weight: 500; }
+    .endpoint-choice input { width: auto; margin: 0 6px 0 0; }
+  </style>
+</head>
+<body>
+  <h1>Fleet Service – WebSocket & Trip Flow (All Scenarios)</h1>
+  <p class="subtitle">Single page: Auth → WebSocket (go online) → Admin create order → NEW_ORDER → Accept/Reject → Full trip flow → Dashboard & Trip history.</p>
+
+  <div class="scenarios">
+    <h2>Scenarios covered</h2>
+    <ul>
+      <li><strong>Auth:</strong> Request OTP → Verify OTP (dev OTP 1234); token used for all below.</li>
+      <li><strong>WebSocket:</strong> <code>/ws/driver</code> (connect only; server sends <code>{"type":"CONNECTED"}</code>) or <code>/ws/driver/location</code> (connect + send LOCATION every 30s; server sends ACK CONNECTED / LOCATION_RECEIVED, NEW_ORDER).</li>
+      <li><strong>Admin:</strong> Create order – automatic (pickup lat/lng → nearest driver gets NEW_ORDER) or manual (offeredDriverId → that driver gets NEW_ORDER if connected).</li>
+      <li><strong>Driver:</strong> Receive NEW_ORDER → Accept or Reject. Full trip: Accept → Arrived at pickup (geofence) → Start trip (OTP) → Arrived at drop (geofence) → End trip.</li>
+      <li><strong>Dashboard:</strong> GET driver home summary (canGoOnline, todaySummary). <strong>Trip history:</strong> GET trips (today/thisWeek/thisMonth), GET trip detail by orderId.</li>
+    </ul>
+  </div>
+
+  <div class="tabs">
+    <button type="button" class="tab-btn active" data-tab="config">Config & Auth</button>
+    <button type="button" class="tab-btn" data-tab="ws">WebSocket</button>
+    <button type="button" class="tab-btn" data-tab="admin">Admin – Create order</button>
+    <button type="button" class="tab-btn" data-tab="trip">Trip flow</button>
+    <button type="button" class="tab-btn" data-tab="dashboard">Dashboard & Trips</button>
+    <button type="button" class="tab-btn" data-tab="log">Unified log</button>
+  </div>
+
+  <!-- Config & Auth -->
+  <div id="panel-config" class="tab-panel active">
+    <section>
+      <h2>Configuration</h2>
+      <label for="baseUrl">Base URL</label>
+      <input id="baseUrl" type="text" value="http://localhost:8080" placeholder="http://localhost:8080" />
+      <label for="driverToken">Driver JWT (WebSocket + driver APIs)</label>
+      <textarea id="driverToken" placeholder="Paste driver JWT from Verify OTP (or use Auth below)" rows="2"></textarea>
+      <label for="adminToken">Admin JWT (optional; for Create order)</label>
+      <textarea id="adminToken" placeholder="Paste admin JWT for creating orders" rows="2"></textarea>
+      <div class="row">
+        <div>
+          <label for="orderId">Order ID (set after create or NEW_ORDER)</label>
+          <input id="orderId" type="number" placeholder="e.g. 4" />
+        </div>
+        <div>
+          <label for="offeredDriverId">Offered driver ID (manual create only)</label>
+          <input id="offeredDriverId" type="number" value="1" placeholder="e.g. 1" />
+        </div>
+      </div>
+      <p style="color:#8b8f98;font-size:12px;">Seed users: Driver 9000000001–3, Admin 9000000005. Country +91, OTP 1234.</p>
+    </section>
+    <section>
+      <h2>Auth (get token)</h2>
+      <div class="row">
+        <div>
+          <label for="authPhone">Phone (10 digits)</label>
+          <input id="authPhone" type="text" value="9000000001" placeholder="9000000001" />
+        </div>
+        <div>
+          <label for="authOtp">OTP (dev: 1234)</label>
+          <input id="authOtp" type="text" value="1234" placeholder="1234" />
+        </div>
+      </div>
+      <div class="button-group">
+        <button type="button" id="btnRequestOtp" class="btn-secondary">Request OTP</button>
+        <button type="button" id="btnVerifyOtp" class="btn-success">Verify OTP (save token)</button>
+      </div>
+      <div id="statusAuth" class="status idle">Request OTP then Verify OTP. Token is saved to Driver JWT above.</div>
+      <div id="logAuth" class="log-area"></div>
+    </section>
+  </div>
+
+  <!-- WebSocket -->
+  <div id="panel-ws" class="tab-panel">
+    <section>
+      <h2>Driver WebSocket</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:12px;">
+        <code>/ws/driver</code>: connect only; server sets driver ONLINE and sends <code>{"type":"CONNECTED"}</code>. No client messages.<br>
+        <code>/ws/driver/location</code>: connect + send LOCATION every 30s; server sends <code>{"type":"ACK","payload":{"message":"CONNECTED"}}</code> then <code>LOCATION_RECEIVED</code> after each LOCATION. NEW_ORDER pushed on both when order is offered.
+      </p>
+      <div class="endpoint-choice" style="margin-bottom:12px;">
+        <label><input type="radio" name="endpoint" value="/ws/driver" /><code>/ws/driver</code></label>
+        <label><input type="radio" name="endpoint" value="/ws/driver/location" checked /><code>/ws/driver/location</code></label>
+      </div>
+      <div class="button-group">
+        <button type="button" id="btnGoOnline" class="btn-success">Go online</button>
+        <button type="button" id="btnConnect" class="btn-primary">Connect</button>
+        <button type="button" id="btnSendLocation" class="btn-secondary" disabled>Send location now</button>
+        <button type="button" id="btnDisconnect" class="btn-secondary" disabled>Disconnect</button>
+      </div>
+      <div id="statusWs" class="status idle">Set Base URL and Driver JWT, then Go online or Connect.</div>
+    </section>
+    <section>
+      <h2>WebSocket log</h2>
+      <div id="logWs" class="log-area"></div>
+    </section>
+  </div>
+
+  <!-- Admin create order -->
+  <div id="panel-admin" class="tab-panel">
+    <section>
+      <h2>Admin – Create order</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:12px;">
+        <strong>Automatic:</strong> include pickup lat/lng – nearest ONLINE driver in radius gets NEW_ORDER (30s per driver). <strong>Manual:</strong> set Offered driver ID in Config – that driver gets NEW_ORDER if connected.
+      </p>
+      <div class="endpoint-choice" style="margin-bottom:12px;">
+        <label><input type="radio" name="adminOrderMode" value="automatic" checked /> Automatic (nearest in radius)</label>
+        <label><input type="radio" name="adminOrderMode" value="manual" /> Manual (specific driver ID)</label>
+      </div>
+      <label for="adminPickup">Pickup address</label>
+      <input id="adminPickup" type="text" value="100 Pickup St, Vellore" />
+      <label for="adminDrop">Drop address</label>
+      <input id="adminDrop" type="text" value="200 Drop Rd, Vellore" />
+      <div class="row">
+        <div><label for="adminPickupLat">Pickup latitude</label><input id="adminPickupLat" type="number" step="any" value="12.9165" /></div>
+        <div><label for="adminPickupLng">Pickup longitude</label><input id="adminPickupLng" type="number" step="any" value="79.1325" /></div>
+      </div>
+      <div class="row">
+        <div><label for="adminDropLat">Drop latitude</label><input id="adminDropLat" type="number" step="any" value="12.9200" /></div>
+        <div><label for="adminDropLng">Drop longitude</label><input id="adminDropLng" type="number" step="any" value="79.1400" /></div>
+      </div>
+      <div class="row">
+        <div><label for="adminFare">Estimated fare</label><input id="adminFare" type="number" value="500" /></div>
+        <div><label for="adminCustomer">Customer name</label><input id="adminCustomer" type="text" value="Test Customer" /></div>
+      </div>
+      <div class="button-group">
+        <button type="button" id="btnCreateOrder" class="btn-primary">Create order</button>
+      </div>
+      <div id="statusAdmin" class="status idle">Copy returned orderId into Order ID in Config. Driver gets NEW_ORDER if connected.</div>
+    </section>
+    <div id="logAdmin" class="log-area" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Trip flow -->
+  <div id="panel-trip" class="tab-panel">
+    <section>
+      <h2>Full trip flow (driver APIs)</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:12px;">Use Order ID and Driver JWT. Lat/lng must be within geofence of order pickup/drop (use same coords as order or from seed).</p>
+      <div class="row" style="margin-bottom:12px;">
+        <div><label for="pickupLat">Pickup lat (arrived-pickup, start-trip)</label><input id="pickupLat" type="number" step="any" value="12.9165" /></div>
+        <div><label for="pickupLng">Pickup lng</label><input id="pickupLng" type="number" step="any" value="79.1325" /></div>
+        <div><label for="dropLat">Drop lat (arrived-drop, end-trip)</label><input id="dropLat" type="number" step="any" value="12.9200" /></div>
+        <div><label for="dropLng">Drop lng</label><input id="dropLng" type="number" step="any" value="79.1400" /></div>
+        <div><label for="otp">OTP (start-trip)</label><input id="otp" type="text" value="1234" /></div>
+      </div>
+      <div class="flow-steps">
+        <div class="flow-step">
+          <span class="step-num">1</span>
+          <span class="step-desc"><strong>Accept order</strong> – POST .../accept (no body). Order must be OFFERED to this driver.</span>
+          <div class="step-actions"><button type="button" id="btnAccept" class="btn-success">Accept</button></div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">2</span>
+          <span class="step-desc"><strong>Arrived at pickup</strong> – POST .../arrived-pickup with pickup lat/lng (geofence). Status → ARRIVED_PICKUP; start-trip OTP generated.</span>
+          <div class="step-actions"><button type="button" id="btnArrivedPickup" class="btn-primary">Arrived at pickup</button></div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">3</span>
+          <span class="step-desc"><strong>Start trip (OTP)</strong> – POST .../start-trip/confirm with otp, pickup lat, lng. Status → IN_PROGRESS.</span>
+          <div class="step-actions"><button type="button" id="btnStartTrip" class="btn-primary">Start trip</button></div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">4</span>
+          <span class="step-desc"><strong>Arrived at drop</strong> – POST .../arrived-drop with drop lat/lng (geofence). Status → ARRIVED_AT_DROP. Then call End trip.</span>
+          <div class="step-actions"><button type="button" id="btnArrivedDrop" class="btn-success">Arrived at drop</button></div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">5</span>
+          <span class="step-desc"><strong>End trip</strong> – POST .../end-trip with drop lat/lng. Status → COMPLETED, completedAt set.</span>
+          <div class="step-actions"><button type="button" id="btnEndTrip" class="btn-success">End trip</button></div>
+        </div>
+        <div class="flow-step">
+          <span class="step-num">–</span>
+          <span class="step-desc"><strong>Reject order</strong> – POST .../reject (no body). 204 No Content.</span>
+          <div class="step-actions"><button type="button" id="btnReject" class="btn-danger">Reject</button></div>
+        </div>
+      </div>
+      <div id="statusTrip" class="status idle">Set Order ID and Driver JWT, then run steps in order.</div>
+    </section>
+    <div id="logTrip" class="log-area" style="margin-top:12px;"></div>
+  </div>
+
+  <!-- Dashboard & Trips -->
+  <div id="panel-dashboard" class="tab-panel">
+    <section>
+      <h2>Dashboard (driver home summary)</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:12px;">GET /api/v1/driver/home/summary – canGoOnline, block, todaySummary (earnings, trips, hoursOnline, distanceKm).</p>
+      <div class="button-group">
+        <button type="button" id="btnDashboard" class="btn-primary">Get dashboard summary</button>
+      </div>
+      <div id="statusDashboard" class="status idle">Use driver token.</div>
+      <div id="logDashboard" class="log-area"></div>
+    </section>
+    <section>
+      <h2>Trip history</h2>
+      <p style="color:#9ca3af;font-size:13px;margin-bottom:12px;">GET .../trips?filter=today|thisWeek|thisMonth&page=0&size=20. GET .../trips/{orderId} for detail.</p>
+      <div class="button-group">
+        <button type="button" id="btnTripsToday" class="btn-secondary">Trips today</button>
+        <button type="button" id="btnTripsWeek" class="btn-secondary">Trips this week</button>
+        <button type="button" id="btnTripsMonth" class="btn-secondary">Trips this month</button>
+        <button type="button" id="btnTripDetail" class="btn-primary">Trip detail (Order ID)</button>
+      </div>
+      <div id="statusTrips" class="status idle">Use driver token and Order ID for detail.</div>
+      <div id="logTrips" class="log-area"></div>
+    </section>
+  </div>
+
+  <!-- Unified log -->
+  <div id="panel-log" class="tab-panel">
+    <section>
+      <h2>Unified log (all events)</h2>
+      <div class="button-group">
+        <button type="button" id="btnClearLog" class="btn-secondary">Clear log</button>
+      </div>
+      <div id="logUnified" class="log-area"></div>
+    </section>
+  </div>
+
+  <script>
+(function () {
+  'use strict';
+
+  var LOCATION_INTERVAL_MS = 30000;
+  var ws = null;
+  var locationTimerId = null;
+
+  function getBaseUrl() {
+    return (document.getElementById('baseUrl').value || '').trim().replace(/\/$/, '');
+  }
+  function getDriverToken() {
+    return (document.getElementById('driverToken').value || '').trim();
+  }
+  function getAdminToken() {
+    return (document.getElementById('adminToken').value || '').trim();
+  }
+  function getOrderId() {
+    var v = document.getElementById('orderId').value;
+    return v ? parseInt(v, 10) : null;
+  }
+  function setOrderId(id) {
+    if (id != null) document.getElementById('orderId').value = String(id);
+  }
+  function setDriverToken(t) {
+    if (t) document.getElementById('driverToken').value = t;
+  }
+
+  function addUnifiedLog(text, kind) {
+    var logEl = document.getElementById('logUnified');
+    var div = document.createElement('div');
+    div.className = 'log-line' + (kind === 'sent' ? ' sent' : kind === 'error' ? ' error' : '');
+    div.innerHTML = '<time>' + new Date().toLocaleTimeString() + '</time> ' + text;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function addLog(elId, text, kind) {
+    var logEl = document.getElementById(elId);
+    if (!logEl) return;
+    var div = document.createElement('div');
+    div.className = 'log-line' + (kind === 'sent' ? ' sent' : kind === 'error' ? ' error' : '');
+    div.innerHTML = '<time>' + new Date().toLocaleTimeString() + '</time> ' + text;
+    logEl.appendChild(div);
+    logEl.scrollTop = logEl.scrollHeight;
+    addUnifiedLog(text, kind);
+  }
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var tab = this.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      this.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+    });
+  });
+  document.getElementById('btnClearLog').addEventListener('click', function () {
+    document.getElementById('logUnified').innerHTML = '';
+  });
+
+  // --- Auth ---
+  function setStatusAuth(msg, className) {
+    var el = document.getElementById('statusAuth');
+    el.textContent = msg;
+    el.className = 'status ' + (className || 'idle');
+  }
+  document.getElementById('btnRequestOtp').addEventListener('click', function () {
+    var baseUrl = getBaseUrl();
+    var phone = (document.getElementById('authPhone').value || '').trim();
+    if (!baseUrl || !phone) {
+      setStatusAuth('Set Base URL and phone.', 'error');
+      return;
+    }
+    var payload = { countryCode: '+91', phoneNumber: phone };
+    addLog('logAuth', 'POST ' + baseUrl + '/api/v1/auth/otp/request\n' + JSON.stringify(payload, null, 2));
+    fetch(baseUrl + '/api/v1/auth/otp/request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+    .then(function (r) {
+      addLog('logAuth', r.status + ' – ' + JSON.stringify(r.data, null, 2), r.status >= 400);
+      setStatusAuth(r.data && r.data.success ? 'OTP sent. Use Verify OTP.' : (r.data && r.data.message) || 'Request failed.', r.status >= 400 ? 'error' : 'connected');
+    })
+    .catch(function (err) {
+      addLog('logAuth', 'Error: ' + err.message, 'error');
+      setStatusAuth('Error: ' + err.message, 'error');
+    });
+  });
+  document.getElementById('btnVerifyOtp').addEventListener('click', function () {
+    var baseUrl = getBaseUrl();
+    var phone = (document.getElementById('authPhone').value || '').trim();
+    var otp = (document.getElementById('authOtp').value || '').trim();
+    if (!baseUrl || !phone || !otp) {
+      setStatusAuth('Set Base URL, phone and OTP.', 'error');
+      return;
+    }
+    var payload = { countryCode: '+91', phoneNumber: phone, otp: otp, preferredLanguageCode: 'EN' };
+    addLog('logAuth', 'POST ' + baseUrl + '/api/v1/auth/otp/verify\n' + JSON.stringify(payload, null, 2));
+    fetch(baseUrl + '/api/v1/auth/otp/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+    .then(function (r) {
+      addLog('logAuth', r.status + ' – ' + JSON.stringify(r.data, null, 2), r.status >= 400);
+      if (r.status >= 200 && r.status < 300 && r.data && r.data.data && r.data.data.token) {
+        setDriverToken(r.data.data.token);
+        setStatusAuth('Token saved to Driver JWT.', 'connected');
+      } else {
+        setStatusAuth(r.data && r.data.message ? r.data.message : 'Verify failed.', 'error');
+      }
+    })
+    .catch(function (err) {
+      addLog('logAuth', 'Error: ' + err.message, 'error');
+      setStatusAuth('Error: ' + err.message, 'error');
+    });
+  });
+
+  // --- WebSocket ---
+  function setStatusWs(msg, className) {
+    var el = document.getElementById('statusWs');
+    el.textContent = msg;
+    el.className = 'status ' + (className || 'idle');
+  }
+  function getSelectedEndpoint() {
+    var radio = document.querySelector('input[name="endpoint"]:checked');
+    return radio ? radio.value : '/ws/driver/location';
+  }
+  function buildWsUrl(endpointOverride) {
+    var baseUrl = getBaseUrl();
+    var token = getDriverToken();
+    if (!baseUrl || !token) return null;
+    var scheme = baseUrl.indexOf('https') === 0 ? 'wss' : 'ws';
+    var host = baseUrl.replace(/^https?:\/\//, '');
+    var path = endpointOverride != null ? endpointOverride : getSelectedEndpoint();
+    return scheme + '://' + host + path + '?token=' + encodeURIComponent(token);
+  }
+  function getLocationForWs() {
+    var lat = parseFloat(document.getElementById('pickupLat').value, 10);
+    var lng = parseFloat(document.getElementById('pickupLng').value, 10);
+    return { lat: isNaN(lat) ? 12.9165 : lat, lng: isNaN(lng) ? 79.1325 : lng };
+  }
+  function sendLocation() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    var ll = getLocationForWs();
+    var msg = { type: 'LOCATION', payload: { latitude: ll.lat, longitude: ll.lng, timestamp: new Date().toISOString() } };
+    try {
+      ws.send(JSON.stringify(msg));
+      addLog('logWs', 'Sent: ' + JSON.stringify(msg), 'sent');
+    } catch (err) {
+      addLog('logWs', 'Send error: ' + err.message, 'error');
+    }
+  }
+  function startLocationTimer() {
+    if (locationTimerId) clearInterval(locationTimerId);
+    sendLocation();
+    locationTimerId = setInterval(sendLocation, LOCATION_INTERVAL_MS);
+  }
+  function stopLocationTimer() {
+    if (locationTimerId) { clearInterval(locationTimerId); locationTimerId = null; }
+  }
+
+  function connectDriverWs(endpointOverride) {
+    var url = buildWsUrl(endpointOverride);
+    if (!url) {
+      setStatusWs('Set Base URL and Driver JWT.', 'error');
+      addLog('logWs', 'Connect skipped: missing Base URL or Driver JWT', 'error');
+      return;
+    }
+    var endpoint = endpointOverride != null ? endpointOverride : getSelectedEndpoint();
+    var isLocation = endpoint === '/ws/driver/location';
+    setStatusWs('Connecting…', 'idle');
+    addLog('logWs', 'Connecting to ' + endpoint + '?token=...');
+    try {
+      ws = new WebSocket(url);
+      ws.onopen = function () {
+        if (isLocation) {
+          setStatusWs('Connected. Sending location every 30s.', 'connected');
+          startLocationTimer();
+          document.getElementById('btnSendLocation').disabled = false;
+        } else {
+          setStatusWs('WebSocket connected. Waiting for CONNECTED.', 'connected');
+        }
+        addLog('logWs', 'WebSocket opened.');
+        document.getElementById('btnConnect').disabled = true;
+        document.getElementById('btnDisconnect').disabled = false;
+      };
+      ws.onmessage = function (e) {
+        var text = e.data;
+        try {
+          var j = JSON.parse(text);
+          text = JSON.stringify(j, null, 2);
+          if (j && j.type === 'NEW_ORDER') {
+            addLog('logWs', 'Received: NEW_ORDER – ' + text, 'sent');
+            setStatusWs('NEW_ORDER received. Order ID set from payload.', 'connected');
+            if (j.payload && j.payload.orderId != null) setOrderId(j.payload.orderId);
+          }
+          if (j && j.type === 'ERROR') {
+            addLog('logWs', 'Received: ERROR – ' + text, 'error');
+          }
+        } catch (err) { /* keep raw */ }
+        addLog('logWs', 'Received: ' + text);
+        if (text.indexOf('"type":"ACK"') !== -1 || text.indexOf('"type": "ACK"') !== -1 || text.indexOf('"type":"CONNECTED"') !== -1 || text.indexOf('"type": "CONNECTED"') !== -1) {
+          setStatusWs('Connected. Ready for NEW_ORDER.', 'connected');
+        }
+        if (text.indexOf('Driver not ONLINE') !== -1 || text.indexOf('POLICY_VIOLATION') !== -1) {
+          setStatusWs('Driver not ONLINE or connection closed.', 'error');
+          stopLocationTimer();
+        }
+      };
+      ws.onerror = function () {
+        addLog('logWs', 'WebSocket error.', 'error');
+        setStatusWs('WebSocket error.', 'error');
+      };
+      ws.onclose = function (e) {
+        addLog('logWs', 'Closed: ' + e.code + (e.reason ? ' ' + e.reason : ''));
+        setStatusWs('Disconnected.', 'idle');
+        stopLocationTimer();
+        document.getElementById('btnConnect').disabled = false;
+        document.getElementById('btnDisconnect').disabled = true;
+        document.getElementById('btnSendLocation').disabled = true;
+        ws = null;
+      };
+      document.getElementById('btnConnect').disabled = true;
+      document.getElementById('btnDisconnect').disabled = true;
+    } catch (err) {
+      setStatusWs('Error: ' + err.message, 'error');
+      addLog('logWs', 'Error: ' + err.message, 'error');
+      document.getElementById('btnConnect').disabled = false;
+    }
+  }
+
+  document.getElementById('btnGoOnline').addEventListener('click', function () {
+    if (!getBaseUrl() || !getDriverToken()) {
+      setStatusWs('Set Base URL and Driver JWT.', 'error');
+      return;
+    }
+    addLog('logWs', 'Go Online: connecting to /ws/driver/location');
+    connectDriverWs('/ws/driver/location');
+  });
+  document.getElementById('btnConnect').addEventListener('click', function () { connectDriverWs(); });
+  document.getElementById('btnSendLocation').addEventListener('click', function () { sendLocation(); });
+  document.getElementById('btnDisconnect').addEventListener('click', function () {
+    stopLocationTimer();
+    if (ws) { try { ws.close(); } catch (err) { addLog('logWs', 'Close error: ' + err.message, 'error'); }
+      ws = null; }
+    document.getElementById('btnConnect').disabled = false;
+    document.getElementById('btnDisconnect').disabled = true;
+    document.getElementById('btnSendLocation').disabled = true;
+    setStatusWs('Disconnected.', 'idle');
+  });
+
+  // --- Admin create order ---
+  function setStatusAdmin(msg, className) {
+    var el = document.getElementById('statusAdmin');
+    el.textContent = msg;
+    el.className = 'status ' + (className || 'idle');
+  }
+  document.getElementById('btnCreateOrder').addEventListener('click', function () {
+    var baseUrl = getBaseUrl();
+    var token = getAdminToken() || getDriverToken();
+    if (!baseUrl || !token) {
+      setStatusAdmin('Set Base URL and Admin JWT (or Driver JWT).', 'error');
+      return;
+    }
+    var isAutomatic = document.querySelector('input[name="adminOrderMode"]:checked').value === 'automatic';
+    var payload = {
+      pickupAddress: (document.getElementById('adminPickup').value || '').trim(),
+      dropAddress: (document.getElementById('adminDrop').value || '').trim(),
+      estimatedFare: parseFloat(document.getElementById('adminFare').value, 10) || 0,
+      customerName: (document.getElementById('adminCustomer').value || '').trim(),
+      pickupLatitude: parseFloat(document.getElementById('adminPickupLat').value, 10),
+      pickupLongitude: parseFloat(document.getElementById('adminPickupLng').value, 10),
+      dropLatitude: parseFloat(document.getElementById('adminDropLat').value, 10),
+      dropLongitude: parseFloat(document.getElementById('adminDropLng').value, 10)
+    };
+    if (isAutomatic) {
+      if (!payload.pickupAddress || !payload.dropAddress || !payload.customerName) {
+        setStatusAdmin('Fill pickup, drop and customer name.', 'error');
+        return;
+      }
+    } else {
+      var driverId = parseInt((document.getElementById('offeredDriverId').value || '').trim(), 10);
+      if (driverId) payload.offeredDriverId = driverId;
+      if (!payload.offeredDriverId && (isNaN(payload.pickupLatitude) || isNaN(payload.pickupLongitude))) {
+        setStatusAdmin('Manual: set Offered driver ID in Config or pickup lat/lng.', 'error');
+        return;
+      }
+    }
+    if (isNaN(payload.dropLatitude)) delete payload.dropLatitude;
+    if (isNaN(payload.dropLongitude)) delete payload.dropLongitude;
+    if (isNaN(payload.pickupLatitude)) delete payload.pickupLatitude;
+    if (isNaN(payload.pickupLongitude)) delete payload.pickupLongitude;
+    setStatusAdmin('Sending…', 'idle');
+    addLog('logAdmin', 'POST ' + baseUrl + '/api/v1/admin/orders\n' + JSON.stringify(payload, null, 2));
+    fetch(baseUrl + '/api/v1/admin/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(payload)
+    })
+    .then(function (res) {
+      return res.json().then(function (data) { return { status: res.status, data: data }; }).catch(function () { return { status: res.status, data: null }; });
+    })
+    .then(function (result) {
+      var msg = result.status + ' – ' + JSON.stringify(result.data, null, 2);
+      addLog('logAdmin', msg, result.status >= 400);
+      if (result.status >= 200 && result.status < 300 && result.data && result.data.data) {
+        var id = result.data.data.orderId != null ? result.data.data.orderId : result.data.data.id;
+        if (id != null) {
+          setOrderId(id);
+          setStatusAdmin('Order created. ID: ' + id + '. Copy to Order ID if needed. Driver gets NEW_ORDER if connected.', 'connected');
+        } else setStatusAdmin('Order created. Copy order id from response.', 'connected');
+      } else {
+        setStatusAdmin(result.data && result.data.message ? result.data.message : 'Request failed.', 'error');
+      }
+    })
+    .catch(function (err) {
+      addLog('logAdmin', 'Error: ' + err.message, 'error');
+      setStatusAdmin('Error: ' + err.message, 'error');
+    });
+  });
+
+  // --- Trip flow ---
+  function setStatusTrip(msg, className) {
+    var el = document.getElementById('statusTrip');
+    el.textContent = msg;
+    el.className = 'status ' + (className || 'idle');
+  }
+  function getPickupLatLng() {
+    var lat = parseFloat(document.getElementById('pickupLat').value, 10);
+    var lng = parseFloat(document.getElementById('pickupLng').value, 10);
+    return { lat: isNaN(lat) ? 12.9165 : lat, lng: isNaN(lng) ? 79.1325 : lng };
+  }
+  function getDropLatLng() {
+    var lat = parseFloat(document.getElementById('dropLat').value, 10);
+    var lng = parseFloat(document.getElementById('dropLng').value, 10);
+    return { lat: isNaN(lat) ? 12.9200 : lat, lng: isNaN(lng) ? 79.1400 : lng };
+  }
+  function getOtp() { return (document.getElementById('otp').value || '1234').trim(); }
+  function driverFetch(path, body, method) {
+    method = method || 'POST';
+    var orderId = getOrderId();
+    var baseUrl = getBaseUrl();
+    var token = getDriverToken();
+    if (!orderId || !baseUrl || !token) {
+      setStatusTrip('Set Order ID, Base URL and Driver JWT.', 'error');
+      return Promise.reject(new Error('Missing config'));
+    }
+    var url = baseUrl + '/api/v1/driver/orders/' + orderId + path;
+    var opts = { method: method, headers: { 'Authorization': 'Bearer ' + token } };
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    return fetch(url, opts).then(function (res) {
+      if (res.status === 204) return Promise.resolve({ status: 204, data: null });
+      return res.json().then(function (data) { return { status: res.status, data: data }; }).catch(function () { return { status: res.status, data: null }; });
+    });
+  }
+  function runTripStep(stepName, path, body, logPrefix) {
+    setStatusTrip('Sending…', 'idle');
+    addLog('logTrip', logPrefix + (path || '') + (body ? ' ' + JSON.stringify(body) : ''));
+    driverFetch(path, body)
+      .then(function (result) {
+        var msg = result.status + ' – ' + (result.data != null ? JSON.stringify(result.data, null, 2) : 'No body');
+        addLog('logTrip', msg, result.status >= 400);
+        if (result.status === 204) {
+          setStatusTrip(stepName + ' OK (204 No Content).', 'connected');
+        } else if (result.status >= 200 && result.status < 400) {
+          setStatusTrip(stepName + ' OK.', 'connected');
+        } else {
+          setStatusTrip(result.data && result.data.message ? result.data.message : stepName + ' failed.', 'error');
+        }
+      })
+      .catch(function (err) {
+        addLog('logTrip', 'Error: ' + err.message, 'error');
+        setStatusTrip('Error: ' + err.message, 'error');
+      });
+  }
+
+  document.getElementById('btnAccept').addEventListener('click', function () { runTripStep('Accept', '/accept', null, 'POST .../accept'); });
+  document.getElementById('btnArrivedPickup').addEventListener('click', function () {
+    var ll = getPickupLatLng();
+    runTripStep('Arrived at pickup', '/arrived-pickup', { latitude: ll.lat, longitude: ll.lng }, 'POST .../arrived-pickup');
+  });
+  document.getElementById('btnStartTrip').addEventListener('click', function () {
+    var ll = getPickupLatLng();
+    runTripStep('Start trip', '/start-trip/confirm', { otp: getOtp(), latitude: ll.lat, longitude: ll.lng }, 'POST .../start-trip/confirm');
+  });
+  document.getElementById('btnArrivedDrop').addEventListener('click', function () {
+    var ll = getDropLatLng();
+    runTripStep('Arrived at drop', '/arrived-drop', { latitude: ll.lat, longitude: ll.lng }, 'POST .../arrived-drop');
+  });
+  document.getElementById('btnEndTrip').addEventListener('click', function () {
+    var ll = getDropLatLng();
+    runTripStep('End trip', '/end-trip', { latitude: ll.lat, longitude: ll.lng }, 'POST .../end-trip');
+  });
+  document.getElementById('btnReject').addEventListener('click', function () { runTripStep('Reject', '/reject', null, 'POST .../reject'); });
+
+  // --- Dashboard ---
+  function setStatusDashboard(msg, className) {
+    var el = document.getElementById('statusDashboard');
+    el.textContent = msg;
+    el.className = 'status ' + (className || 'idle');
+  }
+  document.getElementById('btnDashboard').addEventListener('click', function () {
+    var baseUrl = getBaseUrl();
+    var token = getDriverToken();
+    if (!baseUrl || !token) { setStatusDashboard('Set Base URL and Driver JWT.', 'error'); return; }
+    setStatusDashboard('Loading…', 'idle');
+    addLog('logDashboard', 'GET ' + baseUrl + '/api/v1/driver/home/summary');
+    fetch(baseUrl + '/api/v1/driver/home/summary', { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (r) {
+        addLog('logDashboard', r.status + ' – ' + JSON.stringify(r.data, null, 2), r.status >= 400);
+        setStatusDashboard(r.data && r.data.success ? 'OK' : (r.data && r.data.message) || 'Failed', r.status >= 400 ? 'error' : 'connected');
+      })
+      .catch(function (err) {
+        addLog('logDashboard', 'Error: ' + err.message, 'error');
+        setStatusDashboard('Error: ' + err.message, 'error');
+      });
+  });
+
+  // --- Trip history ---
+  function setStatusTrips(msg, className) {
+    var el = document.getElementById('statusTrips');
+    el.textContent = msg;
+    el.className = 'status ' + (className || 'idle');
+  }
+  function fetchTrips(filter) {
+    var baseUrl = getBaseUrl();
+    var token = getDriverToken();
+    if (!baseUrl || !token) { setStatusTrips('Set Base URL and Driver JWT.', 'error'); return; }
+    var url = baseUrl + '/api/v1/driver/trips?filter=' + encodeURIComponent(filter) + '&page=0&size=20';
+    setStatusTrips('Loading…', 'idle');
+    addLog('logTrips', 'GET ' + url);
+    fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (r) {
+        addLog('logTrips', r.status + ' – ' + JSON.stringify(r.data, null, 2), r.status >= 400);
+        setStatusTrips(r.data && r.data.success ? 'OK' : (r.data && r.data.message) || 'Failed', r.status >= 400 ? 'error' : 'connected');
+      })
+      .catch(function (err) {
+        addLog('logTrips', 'Error: ' + err.message, 'error');
+        setStatusTrips('Error: ' + err.message, 'error');
+      });
+  }
+  document.getElementById('btnTripsToday').addEventListener('click', function () { fetchTrips('today'); });
+  document.getElementById('btnTripsWeek').addEventListener('click', function () { fetchTrips('thisWeek'); });
+  document.getElementById('btnTripsMonth').addEventListener('click', function () { fetchTrips('thisMonth'); });
+  document.getElementById('btnTripDetail').addEventListener('click', function () {
+    var orderId = getOrderId();
+    var baseUrl = getBaseUrl();
+    var token = getDriverToken();
+    if (!orderId || !baseUrl || !token) { setStatusTrips('Set Order ID, Base URL and Driver JWT.', 'error'); return; }
+    var url = baseUrl + '/api/v1/driver/trips/' + orderId;
+    setStatusTrips('Loading…', 'idle');
+    addLog('logTrips', 'GET ' + url);
+    fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
+      .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+      .then(function (r) {
+        addLog('logTrips', r.status + ' – ' + JSON.stringify(r.data, null, 2), r.status >= 400);
+        setStatusTrips(r.data && r.data.success ? 'OK' : (r.data && r.data.message) || 'Failed', r.status >= 400 ? 'error' : 'connected');
+      })
+      .catch(function (err) {
+        addLog('logTrips', 'Error: ' + err.message, 'error');
+        setStatusTrips('Error: ' + err.message, 'error');
+      });
+  });
+})();
+  </script>
+</body>
+</html>

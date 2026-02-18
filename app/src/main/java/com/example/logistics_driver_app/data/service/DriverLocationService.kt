@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.util.Log
@@ -69,10 +70,10 @@ class DriverLocationService : Service() {
          * Stop the service and go offline
          */
         fun stopService(context: Context) {
-            val intent = Intent(context, DriverLocationService::class.java).apply {
-                action = ACTION_GO_OFFLINE
-            }
-            context.startService(intent)
+            Log.d(TAG, "[STOP_SERVICE] stopService() called - stopping service directly")
+            val intent = Intent(context, DriverLocationService::class.java)
+            context.stopService(intent)
+            Log.d(TAG, "[STOP_SERVICE] stopService() called - service will trigger onDestroy()")
         }
     }
 
@@ -116,21 +117,38 @@ class DriverLocationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "[LIFECYCLE] onStartCommand - Action: ${intent?.action}")
+        val action = intent?.action ?: "NULL"
+        Log.d(TAG, "[LIFECYCLE] =====================================")
+        Log.d(TAG, "[LIFECYCLE] onStartCommand called")
+        Log.d(TAG, "[LIFECYCLE] Action: $action")
+        Log.d(TAG, "[LIFECYCLE] Current state: ${if (sharedPreference.getBoolean(KEY_IS_ONLINE, false)) "ONLINE" else "OFFLINE"}")
+        Log.d(TAG, "[LIFECYCLE] =====================================")
         
         when (intent?.action) {
             ACTION_GO_ONLINE -> {
+                Log.i(TAG, "[ACTION] Processing ACTION_GO_ONLINE")
+                
+                // CRITICAL: Call startForeground() IMMEDIATELY to avoid crash
+                // This must be done within 5-10 seconds of startForegroundService()
+                startForeground(NOTIFICATION_ID, createNotification("Going online...", true))
+                Log.d(TAG, "[FOREGROUND] Service promoted to foreground")
+                
+                // Clear state and force fresh connection
+                isConnected = false
+                
+                // Now proceed with going online
                 goOnline()
             }
-            ACTION_GO_OFFLINE -> {
-                goOffline()
-                stopSelf()
-                return START_NOT_STICKY
-            }
             else -> {
+                Log.w(TAG, "[ACTION] No action specified or service restarted")
                 // Service restarted by system - check if should be online
                 if (sharedPreference.getBoolean(KEY_IS_ONLINE, false)) {
                     Log.i(TAG, "[RESTART] Service restarted - restoring online state")
+                    
+                    // Must call startForeground for restarted service too
+                    startForeground(NOTIFICATION_ID, createNotification("Reconnecting...", true))
+                    Log.d(TAG, "[FOREGROUND] Service promoted to foreground (restart)")
+                    
                     goOnline()
                 } else {
                     Log.d(TAG, "[RESTART] Service started but driver was offline - stopping")
@@ -151,13 +169,37 @@ class DriverLocationService : Service() {
      */
     @SuppressLint("MissingPermission")
     private fun goOnline() {
-        Log.i(TAG, "[WEBSOCKET] Going ONLINE")
+        Log.i(TAG, "[WEBSOCKET] =====================================")
+        Log.i(TAG, "[WEBSOCKET] Going ONLINE - Starting connection")
+        Log.i(TAG, "[WEBSOCKET] =====================================")
         
-        // Start foreground service with notification
-        startForeground(NOTIFICATION_ID, createNotification("Connecting...", true))
+        // Check if already online AND connected
+        val alreadyOnline = sharedPreference.getBoolean(KEY_IS_ONLINE, false)
+        if (alreadyOnline && isConnected) {
+            Log.i(TAG, "[STATE] Already ONLINE and connected - re-sending broadcast for UI sync")
+            
+            // Update notification
+            updateNotification("Online - Tracking location", true)
+            
+            // Re-send broadcast to sync UI
+            val onlineBroadcast = Intent("com.example.logistics_driver_app.DRIVER_ONLINE")
+            sendBroadcast(onlineBroadcast)
+            Log.d(TAG, "[BROADCAST] ✓ Sent DRIVER_ONLINE broadcast (already online)")
+            return
+        }
         
-        // Save online state
+        if (alreadyOnline && !isConnected) {
+            Log.w(TAG, "[STATE] Marked ONLINE but WebSocket disconnected - reconnecting")
+        }
+        
+        // Save online state FIRST
         sharedPreference.putBoolean(KEY_IS_ONLINE, true)
+        Log.d(TAG, "[STATE] Saved online state to SharedPreferences")
+        
+        // Broadcast that we're going online (UI updates immediately)
+        val onlineBroadcast = Intent("com.example.logistics_driver_app.DRIVER_ONLINE")
+        sendBroadcast(onlineBroadcast)
+        Log.d(TAG, "[BROADCAST] ✓ Sent DRIVER_ONLINE broadcast")
         
         // Check permissions
         if (!hasLocationPermissions()) {
@@ -186,28 +228,48 @@ class DriverLocationService : Service() {
             }
         }
         
-        // Connect to WebSocket
+        // Connect to WebSocket (async, may fail)
         connectToWebSocket()
+        
+        Log.i(TAG, "[STATUS] Driver is now ONLINE - Connection initiated")
     }
 
     /**
      * Go offline - Stop location tracking, disconnect WebSocket, stop service
      */
     private fun goOffline() {
-        Log.i(TAG, "[WEBSOCKET] Going OFFLINE")
+        Log.i(TAG, "[WEBSOCKET] =====================================  ")
+        Log.i(TAG, "[WEBSOCKET] Going OFFLINE - Starting shutdown")
+        Log.i(TAG, "[WEBSOCKET] =====================================")
         
         isConnected = false
         
-        // Save offline state
+        // Save offline state FIRST
         sharedPreference.putBoolean(KEY_IS_ONLINE, false)
+        Log.d(TAG, "[STATE] Saved offline state to SharedPreferences")
+        
+        // Broadcast that we're going offline (UI updates immediately)
+        val offlineBroadcast = Intent("com.example.logistics_driver_app.DRIVER_OFFLINE")
+        sendBroadcast(offlineBroadcast)
+        Log.d(TAG, "[BROADCAST] ✓ Sent DRIVER_OFFLINE broadcast")
         
         // Stop location updates
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+            Log.d(TAG, "[LOCATION] Stopped location updates")
+        } catch (e: Exception) {
+            Log.e(TAG, "[ERROR] Failed to stop location updates: ${e.message}")
+        }
         
         // Disconnect WebSocket
-        webSocketManager.disconnect()
+        try {
+            webSocketManager.disconnect()
+            Log.d(TAG, "[WEBSOCKET] Disconnected WebSocket")
+        } catch (e: Exception) {
+            Log.e(TAG, "[ERROR] Failed to disconnect WebSocket: ${e.message}")
+        }
         
-        Log.i(TAG, "[STATUS] Driver is now OFFLINE")
+        Log.i(TAG, "[STATUS] Driver is now OFFLINE - Shutdown complete")
     }
 
     /**
@@ -215,11 +277,12 @@ class DriverLocationService : Service() {
      */
     private fun connectToWebSocket() {
         Log.d(TAG, "[WEBSOCKET] Attempting to connect...")
+        updateNotification("Connecting to server...", true)
         
         webSocketManager.connectDriverLocation(object : WebSocketListener {
             override fun onConnected() {
                 isConnected = true
-                Log.i(TAG, "[WEBSOCKET] Connected - Driver is now ONLINE")
+                Log.i(TAG, "[WEBSOCKET] Connected successfully")
                 updateNotification("Online - Tracking location", true)
                 
                 // Start periodic location updates via WebSocket
@@ -228,18 +291,12 @@ class DriverLocationService : Service() {
                         Pair(loc.latitude, loc.longitude)
                     }
                 }
-                
-                // Broadcast online status
-                sendBroadcast(Intent("com.example.logistics_driver_app.DRIVER_ONLINE"))
             }
 
             override fun onDisconnected(code: Int, reason: String) {
                 isConnected = false
                 Log.w(TAG, "[WEBSOCKET] Disconnected: $reason")
                 updateNotification("Disconnected - Reconnecting...", true)
-                
-                // Broadcast offline status
-                sendBroadcast(Intent("com.example.logistics_driver_app.DRIVER_OFFLINE"))
             }
 
             override fun onAckReceived(message: String) {
@@ -247,27 +304,55 @@ class DriverLocationService : Service() {
             }
 
             override fun onNewOrderReceived(order: NewOrderPayload) {
+                Log.i(TAG, "[ORDER] ========================================")
+                Log.i(TAG, "[ORDER] onNewOrderReceived CALLED - Thread: ${Thread.currentThread().name}")
+                Log.i(TAG, "[ORDER] ========================================")
                 Log.i(TAG, "[ORDER] New order received: ${order.orderId}")
+                Log.d(TAG, "[ORDER] Pickup: ${order.pickup}, Drop: ${order.drop}, Fare: ${order.estimatedFare}")
+                Log.d(TAG, "[ORDER] Customer: ${order.customerName ?: "Unknown"}, Distance: ${order.distanceKm} km")
                 
-                // Send broadcast for new order
-                sendBroadcast(Intent("com.example.logistics_driver_app.NEW_ORDER").apply {
-                    putExtra("order_id", order.orderId)
-                    putExtra("pickup_address", order.pickup)
-                    putExtra("dropoff_address", order.drop)
-                })
-                
-                // Update notification
-                updateNotification("New Order! ${order.pickup}", false)
+                // Post to main thread to send broadcast (broadcasts should be sent on main thread)
+                Handler(Looper.getMainLooper()).post {
+                    try {
+                        Log.d(TAG, "[BROADCAST] Posting broadcast on main thread")
+                        // Send broadcast for new order with all data
+                        val intent = Intent("com.example.logistics_driver_app.NEW_ORDER").apply {
+                            setPackage(packageName) // Ensure broadcast is delivered to this app
+                            putExtra("order_id", order.orderId)
+                            putExtra("pickup_address", order.pickup)
+                            putExtra("drop_address", order.drop)
+                            putExtra("distance_km", order.distanceKm)
+                            putExtra("estimated_fare", order.estimatedFare.toInt())
+                            putExtra("helper_required", order.helperRequired)
+                            putExtra("customer_name", order.customerName ?: "Customer")
+                        }
+                        sendBroadcast(intent)
+                        Log.d(TAG, "[BROADCAST] ✓ Sent NEW_ORDER broadcast for order #${order.orderId} to package: $packageName")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[ERROR] Failed to send broadcast: ${e.message}", e)
+                    }
+                    
+                    try {
+                        // Update notification
+                        updateNotification("New Order from ${order.customerName ?: "Customer"}!", false)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[ERROR] Failed to update notification: ${e.message}", e)
+                    }
+                }
             }
 
             override fun onError(errorMessage: String) {
                 Log.e(TAG, "[WEBSOCKET] Error: $errorMessage")
-                updateNotification("Error: $errorMessage", true)
+                updateNotification("Online (Server connecting...)", true)
             }
 
             override fun onConnectionError(throwable: Throwable) {
-                Log.e(TAG, "[WEBSOCKET] Connection error: ${throwable.message}", throwable)
-                updateNotification("Connection failed - Retrying...", true)
+                Log.e(TAG, "[WEBSOCKET] Connection error: ${throwable.message}")
+                updateNotification("Online (Server unavailable)", true)
+                // Don't keep retrying if getting 404 - server endpoint doesn't exist
+                if (throwable.message?.contains("404") == true) {
+                    Log.w(TAG, "[WEBSOCKET] Server endpoint not found (404) - stopping reconnection attempts")
+                }
             }
         })
     }
@@ -304,17 +389,6 @@ class DriverLocationService : Service() {
             notificationIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
-        // Action to go offline
-        val offlineIntent = Intent(this, DriverLocationService::class.java).apply {
-            action = ACTION_GO_OFFLINE
-        }
-        val offlinePendingIntent = PendingIntent.getService(
-            this,
-            1,
-            offlineIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Driver Mode: Online")
@@ -322,7 +396,6 @@ class DriverLocationService : Service() {
             .setSmallIcon(R.drawable.ic_location) // Make sure you have this icon
             .setContentIntent(pendingIntent)
             .setOngoing(ongoing)
-            .addAction(R.drawable.ic_close, "Go Offline", offlinePendingIntent)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .build()
@@ -352,14 +425,20 @@ class DriverLocationService : Service() {
     }
 
     override fun onDestroy() {
-        Log.w(TAG, "[LIFECYCLE] Service onDestroy")
+        Log.w(TAG, "[LIFECYCLE] Service onDestroy - beginning cleanup")
         
-        // Clean up
-        fusedLocationClient.removeLocationUpdates(locationCallback)
+        // Always perform full cleanup to ensure clean state
+        Log.i(TAG, "[SHUTDOWN] Service destroyed - performing cleanup")
+        goOffline()
         
-        // If driver should be online, service will restart due to START_STICKY
-        if (sharedPreference.getBoolean(KEY_IS_ONLINE, false)) {
-            Log.i(TAG, "[RESTART] Service destroyed but driver is online - will restart")
+        // Mark as not connected
+        isConnected = false
+        
+        // Always clean up location updates
+        try {
+            fusedLocationClient.removeLocationUpdates(locationCallback)
+        } catch (e: Exception) {
+            // Ignore errors during final cleanup
         }
         
         super.onDestroy()

@@ -44,16 +44,17 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     
     private var outerPulseAnimator: ObjectAnimator? = null
     private var innerPulseAnimator: ObjectAnimator? = null
-    private val tripRequestHandler = Handler(Looper.getMainLooper())
-    private var tripRequestRunnable: Runnable? = null
     private var isShowingTripRequest = false
     
     // BroadcastReceivers for service events
     private val driverOnlineReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i(TAG, "[BROADCAST] Driver went ONLINE")
+            Log.i(TAG, "[BROADCAST] ✓ DRIVER_ONLINE broadcast received")
             isOnline = true
             updateUIForOnlineState()
+            
+            // Show toast confirming online mode
+            Toast.makeText(context, "Going online - Connecting to server...", Toast.LENGTH_SHORT).show()
         }
     }
     
@@ -62,20 +63,40 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             Log.i(TAG, "[BROADCAST] Driver went OFFLINE")
             isOnline = false
             updateUIForOfflineState()
+            
+            // Show toast confirming offline mode
+            Toast.makeText(context, "You are now offline", Toast.LENGTH_SHORT).show()
         }
     }
     
     private val newOrderReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            Log.i(TAG, "[BROADCAST] New order received")
-            val orderId = intent?.getStringExtra("order_id")
-            val pickupAddress = intent?.getStringExtra("pickup_address")
-            val dropoffAddress = intent?.getStringExtra("dropoff_address")
+            Log.i(TAG, "[BROADCAST] ========================================")
+            Log.i(TAG, "[BROADCAST] ✓ NEW_ORDER broadcast received in Fragment")
+            Log.i(TAG, "[BROADCAST] Thread: ${Thread.currentThread().name}")
+            Log.i(TAG, "[BROADCAST] ========================================")
             
-            // Show trip request
-            if (orderId != null && !isShowingTripRequest) {
-                showTripRequestBottomSheet()
-            }
+            val orderId = intent?.getLongExtra("order_id", 0) ?: 0
+            val pickup = intent?.getStringExtra("pickup_address") ?: ""
+            val drop = intent?.getStringExtra("drop_address") ?: ""
+            val distanceKm = intent?.getDoubleExtra("distance_km", 0.0) ?: 0.0
+            val estimatedFare = intent?.getIntExtra("estimated_fare", 0) ?: 0
+            val helperRequired = intent?.getBooleanExtra("helper_required", false) ?: false
+            val customerName = intent?.getStringExtra("customer_name") ?: "Customer"
+            
+            Log.d(TAG, "[ORDER] Order #$orderId from $customerName")
+            Log.d(TAG, "[ORDER] Pickup: $pickup → Drop: $drop, Fare: ₹$estimatedFare")
+            
+            // Show trip request bottom sheet with real order data
+            showTripRequestBottomSheet(
+                orderId = orderId,
+                pickup = pickup,
+                drop = drop,
+                distanceKm = distanceKm,
+                estimatedFare = estimatedFare,
+                helperRequired = helperRequired,
+                customerName = customerName
+            )
         }
     }
 
@@ -88,6 +109,11 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        
+        Log.i(TAG, "[LIFECYCLE] ========================================")
+        Log.i(TAG, "[LIFECYCLE] onViewCreated CALLED")
+        Log.i(TAG, "[LIFECYCLE] Fragment: ${this.javaClass.simpleName}")
+        Log.i(TAG, "[LIFECYCLE] ========================================")
 
         setupViews()
         setupObservers()
@@ -95,10 +121,18 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
         registerBroadcastReceivers()
         
         // Check if service is already running and restore state
-        isOnline = DriverLocationService.isDriverOnline(requireContext())
-        if (isOnline) {
-            Log.i(TAG, "[INIT] Service already running - restoring ONLINE state")
-            updateUIForOnlineState()
+        // Delay slightly to ensure views are properly laid out
+        binding.sliderButton.post {
+            isOnline = DriverLocationService.isDriverOnline(requireContext())
+            Log.d(TAG, "[INIT] Checking driver state: isOnline = $isOnline")
+            if (isOnline) {
+                Log.i(TAG, "[INIT] Service already running - restoring ONLINE state")
+                updateUIForOnlineState()
+            } else {
+                Log.d(TAG, "[INIT] Driver is OFFLINE - showing Go Online slider")
+                // Ensure slider is at start position
+                binding.sliderButton.x = 4f
+            }
         }
         
         // Fetch home summary data
@@ -109,6 +143,10 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
      * Register broadcast receivers for service events
      */
     private fun registerBroadcastReceivers() {
+        Log.i(TAG, "[BROADCAST] ========================================")
+        Log.i(TAG, "[BROADCAST] registerBroadcastReceivers CALLED")
+        Log.i(TAG, "[BROADCAST] ========================================")
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requireContext().registerReceiver(
                 driverOnlineReceiver,
@@ -125,6 +163,7 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
                 IntentFilter("com.example.logistics_driver_app.NEW_ORDER"),
                 Context.RECEIVER_NOT_EXPORTED
             )
+            Log.d(TAG, "[BROADCAST] Registered receivers (TIRAMISU+) for NEW_ORDER, DRIVER_ONLINE, DRIVER_OFFLINE")
         } else {
             requireContext().registerReceiver(
                 driverOnlineReceiver,
@@ -138,8 +177,9 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
                 newOrderReceiver,
                 IntentFilter("com.example.logistics_driver_app.NEW_ORDER")
             )
+            Log.d(TAG, "[BROADCAST] Registered receivers (legacy) for NEW_ORDER, DRIVER_ONLINE, DRIVER_OFFLINE")
         }
-        Log.d(TAG, "[BROADCAST] Receivers registered")
+        Log.d(TAG, "[BROADCAST] ✓ All receivers registered successfully")
     }
 
     private fun setupViews() {
@@ -177,6 +217,35 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
         viewModel.error.observe(viewLifecycleOwner) { errorMessage ->
             errorMessage?.let {
                 Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // Observe status verification state
+        viewModel.statusVerifying.observe(viewLifecycleOwner) { isVerifying ->
+            Log.d(TAG, "[STATUS_VERIFY] Verifying status: $isVerifying")
+            if (isVerifying) {
+                showStatusLoader()
+            } else {
+                hideStatusLoader()
+            }
+        }
+
+        // Observe verified driver status
+        viewModel.verifiedDriverStatus.observe(viewLifecycleOwner) { status ->
+            status?.let {
+                Log.i(TAG, "[STATUS_VERIFY] Status verified from backend: $status")
+                when (status) {
+                    "ONLINE" -> {
+                        isOnline = true
+                        updateUIForOnlineState()
+                        Toast.makeText(context, "You are now online", Toast.LENGTH_SHORT).show()
+                    }
+                    "OFFLINE" -> {
+                        isOnline = false
+                        updateUIForOfflineState()
+                        Toast.makeText(context, "You are now offline", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
     }
@@ -264,6 +333,24 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
         }
     }
 
+    private fun showStatusLoader() {
+        binding.apply {
+            statusLoader.visibility = View.VISIBLE
+            tvSliderText.visibility = View.GONE
+            sliderButton.isEnabled = false
+            Log.d(TAG, "[STATUS_VERIFY] Showing status verification loader")
+        }
+    }
+
+    private fun hideStatusLoader() {
+        binding.apply {
+            statusLoader.visibility = View.GONE
+            tvSliderText.visibility = View.VISIBLE
+            sliderButton.isEnabled = true
+            Log.d(TAG, "[STATUS_VERIFY] Hiding status verification loader")
+        }
+    }
+
     private fun navigateToRedirectTarget(redirectTo: String) {
         when (redirectTo) {
             "WALLET" -> {
@@ -282,7 +369,8 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             sliderMaxX = binding.sliderContainer.width.toFloat() - binding.sliderButton.width.toFloat() - 8f
             
             binding.sliderButton.setOnTouchListener { view, event ->
-                if (!canGoOnline) {
+                // Only block if trying to go online when not allowed
+                if (!isOnline && !canGoOnline) {
                     // Show message if cannot go online
                     viewModel.homeSummary.value?.block?.let {
                         Toast.makeText(context, it.message, Toast.LENGTH_SHORT).show()
@@ -308,12 +396,14 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
                         true
                     }
                     MotionEvent.ACTION_UP -> {
+                        // Slider always starts at START position
+                        // Always slide RIGHT to toggle state (online/offline)
                         if (view.x >= sliderMaxX * 0.8f) {
-                            // Slider completed
+                            // Slider completed - toggle state
                             view.x = sliderMaxX
                             onSliderCompleted()
                         } else {
-                            // Reset slider
+                            // Reset slider to start
                             animateSliderReset(view)
                         }
                         true
@@ -367,31 +457,61 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             start()
         }
     }
+    
+    private fun animateSliderResetToEnd(view: View) {
+        ObjectAnimator.ofFloat(view, "x", view.x, sliderMaxX).apply {
+            duration = 200
+            addUpdateListener { animation ->
+                val progress = animation.animatedFraction
+                updateSliderBackground(progress)
+            }
+            start()
+        }
+    }
 
     private fun onSliderCompleted() {
         if (!isOnline && canGoOnline) {
             // Go online
-            Log.d(TAG, "[WEBSOCKET] Driver going ONLINE - Starting connection...")
-            isOnline = true
+            Log.d(TAG, "[SLIDER] Slide completed - going ONLINE")
             updateOnlineStatus()
-            Log.i(TAG, "[WEBSOCKET] Driver is now ONLINE - WebSocket should connect")
         } else if (isOnline) {
             // Go offline
-            Log.d(TAG, "[WEBSOCKET] Driver going OFFLINE - Disconnecting...")
-            isOnline = false
+            Log.d(TAG, "[SLIDER] Slide completed - going OFFLINE")
             updateOfflineStatus()
-            Log.i(TAG, "[WEBSOCKET] Driver is now OFFLINE - WebSocket should disconnect")
+        }
+        
+        // DON'T reset slider here - let the broadcast receiver handle UI updates
+        // This prevents the slider from jumping back and forth
+    }
+    
+    /**
+     * Reset slider to start position
+     */
+    private fun resetSliderPosition() {
+        binding.sliderButton.post {
+            ObjectAnimator.ofFloat(binding.sliderButton, "x", binding.sliderButton.x, 4f).apply {
+                duration = 200
+                interpolator = AccelerateDecelerateInterpolator()
+                start()
+            }
         }
     }
     
     private fun updateOnlineStatus() {
         Log.d(TAG, "[SERVICE] Starting DriverLocationService to go ONLINE")
         
-        // Start foreground service
-        DriverLocationService.startService(requireContext())
-        
-        // UI will be updated when DRIVER_ONLINE broadcast is received
-        Log.i(TAG, "[WEBSOCKET] Service started - waiting for connection confirmation")
+        try {
+            // Start foreground service
+            DriverLocationService.startService(requireContext())
+            
+            // Show loader and verify backend status
+            Log.d(TAG, "[STATUS_VERIFY] Starting status verification for ONLINE")
+            viewModel.verifyDriverStatus("ONLINE", maxAttempts = 15, delayMs = 1000L)
+        } catch (e: Exception) {
+            Log.e(TAG, "[ERROR] Failed to start service: ${e.message}", e)
+            Toast.makeText(requireContext(), "Error starting service: ${e.message}", Toast.LENGTH_LONG).show()
+            hideStatusLoader()
+        }
     }
     
     /**
@@ -399,6 +519,13 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
      */
     private fun updateUIForOnlineState() {
         Log.d(TAG, "[UI] Updating UI to ONLINE state")
+        
+        // Only update if binding is available
+        if (_binding == null) {
+            Log.w(TAG, "[UI] Binding is null, skipping UI update")
+            return
+        }
+        
         binding.apply {
             tvStatus.text = "You are Online"
             tvStatus.setTextColor(resources.getColor(R.color.primary, null))
@@ -408,17 +535,21 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             sliderContainer.setBackgroundResource(R.drawable.bg_slider_track_red)
             sliderButton.setBackgroundResource(R.drawable.bg_slider_button_red)
             
-            // Reset slider position
-            sliderButton.x = 4f
+            // Reset slider to START position (so user can slide left to go offline)
+            sliderButton.post {
+                Log.d(TAG, "[UI] Resetting slider to START position: 4f")
+                ObjectAnimator.ofFloat(sliderButton, "x", sliderButton.x, 4f).apply {
+                    duration = 300
+                    interpolator = AccelerateDecelerateInterpolator()
+                    start()
+                }
+            }
             
             // Show Searching animation in center
             searchingContainer.visibility = View.VISIBLE
             
             // Start pulse animations
             startPulseAnimations()
-            
-            // Start showing trip requests every 5 seconds
-            startTripRequestTimer()
         }
         
         Log.i(TAG, "[STATUS] UI updated to ONLINE - Animations started")
@@ -427,11 +558,12 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     private fun updateOfflineStatus() {
         Log.d(TAG, "[SERVICE] Stopping DriverLocationService to go OFFLINE")
         
-        // Stop foreground service
+        // Stop foreground service - it will handle cleanup in goOffline()
         DriverLocationService.stopService(requireContext())
         
-        // UI will be updated when DRIVER_OFFLINE broadcast is received
-        Log.i(TAG, "[WEBSOCKET] Service stop requested - waiting for confirmation")
+        // Show loader and verify backend status
+        Log.d(TAG, "[STATUS_VERIFY] Starting status verification for OFFLINE")
+        viewModel.verifyDriverStatus("OFFLINE", maxAttempts = 10, delayMs = 1000L)
     }
     
     /**
@@ -439,6 +571,13 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
      */
     private fun updateUIForOfflineState() {
         Log.d(TAG, "[UI] Updating UI to OFFLINE state")
+        
+        // Only update if binding is available
+        if (_binding == null) {
+            Log.w(TAG, "[UI] Binding is null, skipping UI update")
+            return
+        }
+        
         binding.apply {
             tvStatus.text = "You are Offline"
             tvStatus.setTextColor(resources.getColor(R.color.text_secondary, null))
@@ -448,17 +587,21 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             sliderContainer.setBackgroundResource(R.drawable.bg_slider_track)
             sliderButton.setBackgroundResource(R.drawable.bg_slider_button)
             
-            // Reset slider position
-            sliderButton.x = 4f
+            // Move slider to START position (offline state)
+            sliderButton.post {
+                Log.d(TAG, "[UI] Moving slider to START position: 4f")
+                ObjectAnimator.ofFloat(sliderButton, "x", sliderButton.x, 4f).apply {
+                    duration = 300
+                    interpolator = AccelerateDecelerateInterpolator()
+                    start()
+                }
+            }
             
             // Hide Searching animation
             searchingContainer.visibility = View.GONE
             
             // Stop pulse animations
             stopPulseAnimations()
-            
-            // Stop trip request timer
-            stopTripRequestTimer()
         }
         
         Log.i(TAG, "[STATUS] UI updated to OFFLINE - Animations stopped")
@@ -524,51 +667,97 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
         }
     }
     
-    private fun startTripRequestTimer() {
-        tripRequestRunnable = object : Runnable {
-            override fun run() {
-                if (isOnline && !isShowingTripRequest) {
-                    showTripRequestBottomSheet()
-                }
-                tripRequestHandler.postDelayed(this, 5000) // 5 seconds
-            }
-        }
-        tripRequestHandler.postDelayed(tripRequestRunnable!!, 5000)
-    }
-    
-    private fun stopTripRequestTimer() {
-        tripRequestRunnable?.let {
-            tripRequestHandler.removeCallbacks(it)
-        }
-        tripRequestRunnable = null
-    }
-    
-    private fun showTripRequestBottomSheet() {
+    private fun showTripRequestBottomSheet(
+        orderId: Long,
+        pickup: String,
+        drop: String,
+        distanceKm: Double,
+        estimatedFare: Int,
+        helperRequired: Boolean,
+        customerName: String = "Customer"
+    ) {
+        Log.i(TAG, "[BOTTOM_SHEET] ========================================")
+        Log.i(TAG, "[BOTTOM_SHEET] showTripRequestBottomSheet CALLED")
+        Log.i(TAG, "[BOTTOM_SHEET] Order #$orderId from $customerName")
+        Log.i(TAG, "[BOTTOM_SHEET] Thread: ${Thread.currentThread().name}")
+        Log.i(TAG, "[BOTTOM_SHEET] ========================================")
+        
         // Prevent showing multiple bottom sheets
-        if (isShowingTripRequest) return
+        if (isShowingTripRequest) {
+            Log.w(TAG, "[ORDER] Bottom sheet already showing, skipping")
+            return
+        }
         
         isShowingTripRequest = true
-        val bottomSheet = TripRequestBottomSheet.newInstance()
+        Log.d(TAG, "[BOTTOM_SHEET] Set isShowingTripRequest = true")
+        
+        // Format distance display
+        val tripDistance = if (distanceKm > 0) "~${String.format("%.1f", distanceKm)} km trip" else "Distance not available"
+        
+        val bottomSheet = TripRequestBottomSheet.newInstance(
+            pickupAddress = pickup,
+            pickupDistance = "Nearby",  // We don't have driver's current location to calculate this
+            dropAddress = drop,
+            tripDistance = tripDistance,
+            packageType = "Package",  // Default value, server doesn't send this yet
+            packageWeight = "Unknown",  // Default value, server doesn't send this yet
+            estimatedFare = estimatedFare,
+            helperRequired = helperRequired
+        )
         
         bottomSheet.setOnAcceptListener {
             isShowingTripRequest = false
-            Toast.makeText(context, "Order accepted!", Toast.LENGTH_SHORT).show()
+            Log.i(TAG, "[ORDER] ========================================")
+            Log.i(TAG, "[ORDER] Driver accepted order #$orderId")
+            Log.i(TAG, "[ORDER] ========================================")
             
-            // Stop the trip request timer
-            stopTripRequestTimer()
-            
-            // Navigate to pickup arrival screen
-            findNavController().navigate(R.id.action_driverHome_to_pickupArrival)
+            // Call API to accept order
+            viewModel.acceptOrder(
+                orderId = orderId,
+                onSuccess = {
+                    Log.i(TAG, "[ORDER] ✓ Order #$orderId successfully accepted via API")
+                    // Navigate to pickup arrival screen
+                    try {
+                        findNavController().navigate(R.id.action_driverHome_to_pickupArrival)
+                        Log.d(TAG, "[NAVIGATION] Navigated to pickup arrival screen")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[NAVIGATION] Error navigating: ${e.message}", e)
+                        Toast.makeText(context, "Navigation error", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onError = { errorMessage ->
+                    Log.e(TAG, "[ORDER] ✗ Failed to accept order #$orderId: $errorMessage")
+                    Toast.makeText(context, "Failed to accept order: $errorMessage", Toast.LENGTH_LONG).show()
+                }
+            )
         }
         
         bottomSheet.setOnDeclineListener {
             isShowingTripRequest = false
-            Toast.makeText(context, "Order declined", Toast.LENGTH_SHORT).show()
+            Log.i(TAG, "[ORDER] ========================================")
+            Log.i(TAG, "[ORDER] Driver declined order #$orderId")
+            Log.i(TAG, "[ORDER] ========================================")
+            
+            // Call API to reject order
+            viewModel.rejectOrder(
+                orderId = orderId,
+                onSuccess = {
+                    Log.i(TAG, "[ORDER] ✓ Order #$orderId successfully rejected via API")
+                    Toast.makeText(context, "Order declined", Toast.LENGTH_SHORT).show()
+                },
+                onError = { errorMessage ->
+                    Log.e(TAG, "[ORDER] ✗ Failed to reject order #$orderId: $errorMessage")
+                    Toast.makeText(context, "Failed to decline order: $errorMessage", Toast.LENGTH_SHORT).show()
+                }
+            )
         }
         
         bottomSheet.setOnTimeoutListener {
             isShowingTripRequest = false
+            Log.w(TAG, "[ORDER] Order $orderId timeout (30s expired)")
             Toast.makeText(context, "Request timeout", Toast.LENGTH_SHORT).show()
+            
+            // TODO: Timeout should auto-reject on server side
         }
         
         // Ensure flag is reset even if dialog is dismissed unexpectedly
@@ -576,7 +765,14 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             isShowingTripRequest = false
         }
         
-        bottomSheet.show(childFragmentManager, "TripRequestBottomSheet")
+        try {
+            Log.d(TAG, "[BOTTOM_SHEET] Attempting to show bottom sheet...")
+            bottomSheet.show(childFragmentManager, "TripRequestBottomSheet")
+            Log.d(TAG, "[BOTTOM_SHEET] ✓ Bottom sheet shown for order #$orderId from $customerName")
+        } catch (e: Exception) {
+            Log.e(TAG, "[BOTTOM_SHEET] ERROR showing bottom sheet: ${e.message}", e)
+            isShowingTripRequest = false
+        }
     }
     
     override fun onDestroyView() {
@@ -594,7 +790,6 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
         
         // Stop animations and timers before view is destroyed
         stopPulseAnimations()
-        stopTripRequestTimer()
         isShowingTripRequest = false
         
         // NOTE: Service continues running in background even when view is destroyed

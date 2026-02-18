@@ -68,8 +68,34 @@
             android:src="@drawable/ic_menu"
             app:tint="@color/text_primary" />
     </LinearLayout>
+    
+    <!-- Header Card (Always visible) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/headerCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/topBar">
 
-    <!-- Status Card at Top -->
+        <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="Head to pickup location"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </androidx.cardview.widget.CardView>
+
+    <!-- Status Card at Top (Shown only after arrival) -->
     <androidx.cardview.widget.CardView
         android:id="@+id/statusCard"
         android:layout_width="0dp"
@@ -77,6 +103,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginTop="16dp"
+        android:visibility="gone"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="16dp"
         app:cardElevation="4dp"
@@ -249,6 +276,19 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
+            <!-- Arrived at Pickup Button (t4.png state) -->
+            <Button
+                android:id="@+id/btnArrivedAtPickup"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_button_primary"
+                android:text="Arrived at Pickup"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textAllCaps="false" />
+
             <!-- OTP Section (for t6 design) -->
             <LinearLayout
                 android:id="@+id/otpSection"
@@ -257,7 +297,7 @@
                 android:layout_marginTop="16dp"
                 android:orientation="vertical"
                 android:visibility="gone"
-                tools:visibility="visible">
+                tools:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -340,12 +380,13 @@
                     tools:visibility="visible" />
             </LinearLayout>
 
-            <!-- Slider Button Section -->
+            <!-- Slider Button Section (t5.png state - shown after arrival) -->
             <FrameLayout
                 android:id="@+id/sliderContainer"
                 android:layout_width="match_parent"
                 android:layout_height="64dp"
                 android:layout_marginTop="16dp"
+                android:visibility="gone"
                 android:background="@drawable/bg_slider_track">
 
                 <TextView

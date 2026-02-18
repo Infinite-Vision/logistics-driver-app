@@ -41,6 +41,9 @@ class PickupArrivalFragment : BaseFragment<FragmentPickupArrivalBinding>() {
 
     private fun setupViews() {
         binding.apply {
+            // Initial state - show button, hide slider and status
+            showButtonState()
+            
             // SOS button
             btnSos.setOnClickListener {
                 // Handle SOS action
@@ -64,7 +67,12 @@ class PickupArrivalFragment : BaseFragment<FragmentPickupArrivalBinding>() {
                 }
             }
 
-            // Slider for starting trip
+            // Arrived at Pickup Button (t4.png)
+            btnArrivedAtPickup.setOnClickListener {
+                onArrivedAtPickup()
+            }
+            
+            // Slider for starting trip (t5.png)
             setupSlider()
 
             // Call Button
@@ -74,6 +82,40 @@ class PickupArrivalFragment : BaseFragment<FragmentPickupArrivalBinding>() {
                 }
             }
         }
+    }
+    
+    private fun showButtonState() {
+        // t4.png state - Show "Arrived at Pickup" button
+        binding.apply {
+            headerCard.visibility = View.VISIBLE
+            tvHeaderTitle.text = "Head to pickup location"
+            btnArrivedAtPickup.visibility = View.VISIBLE
+            sliderContainer.visibility = View.GONE
+            statusCard.visibility = View.GONE
+        }
+    }
+    
+    private fun showSliderState() {
+        // t5.png state - Show slider and waiting status
+        binding.apply {
+            headerCard.visibility = View.GONE
+            btnArrivedAtPickup.visibility = View.GONE
+            sliderContainer.visibility = View.VISIBLE
+            statusCard.visibility = View.VISIBLE
+            tvStatus.text = "Waiting for customer..."
+            startWaitTimer()
+        }
+    }
+    
+    private fun onArrivedAtPickup() {
+        // TODO: Call API to mark arrived at pickup
+        Bakery.showToast(requireContext(), "Marked as arrived at pickup")
+        showSliderState()
+    }
+    
+    private fun startWaitTimer() {
+        // TODO: Implement wait timer
+        binding.tvWaitTimer.text = "Wait 00:00"
     }
 
     private fun observeViewModel() {
@@ -96,7 +138,45 @@ class PickupArrivalFragment : BaseFragment<FragmentPickupArrivalBinding>() {
     }
 
     private fun setupSlider() {
-        // Slider implementation for starting trip - TODO
+        // Slider implementation for starting trip
+        binding.sliderButton.setOnTouchListener { view, event ->
+            when (event.action) {
+                android.view.MotionEvent.ACTION_DOWN -> {
+                    // Start dragging
+                    true
+                }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    // Update slider position
+                    val newX = event.rawX - view.width / 2
+                    val maxX = binding.sliderContainer.width - view.width
+                    if (newX in 0f..maxX.toFloat()) {
+                        view.x = newX
+                    }
+                    
+                    // Check if slid to end
+                    if (newX >= maxX * 0.9) {
+                        onStartTrip()
+                        return@setOnTouchListener true
+                    }
+                    true
+                }
+                android.view.MotionEvent.ACTION_UP -> {
+                    // Reset slider position if not completed
+                    android.animation.ObjectAnimator.ofFloat(view, "translationX", 0f).apply {
+                        duration = 200
+                        start()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+    
+    private fun onStartTrip() {
+        // TODO: Verify OTP and start trip
+        Bakery.showToast(requireContext(), "Starting trip...")
+        // Navigate to next screen
     }
 
     private fun makePhoneCall(phoneNumber: String) {
