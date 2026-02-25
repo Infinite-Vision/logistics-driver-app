@@ -200,7 +200,16 @@
         android:id="@+id/paymentCollectionFragment"
         android:name="com.example.logistics_driver_app.modules.tripModule.view.fragment.PaymentCollectionFragment"
         android:label="Collect Payment"
-        tools:layout="@layout/fragment_payment_collection" />
+        tools:layout="@layout/fragment_payment_collection">
+
+        <action
+            android:id="@+id/action_payment_to_tripCompleted"
+            app:destination="@id/tripCompletedFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
 
     <!-- Cancel Trip -->
     <fragment

@@ -6,23 +6,32 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.Common.util.Bakery
+import com.example.logistics_driver_app.Common.util.SharedPreference
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.example.logistics_driver_app.R
 import com.example.logistics_driver_app.databinding.FragmentTripActiveBinding
-import com.example.logistics_driver_app.data.model.TripStatus
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
-import com.example.logistics_driver_app.modules.tripModule.viewModel.TripActiveViewModel
+import com.example.logistics_driver_app.modules.tripModule.viewModel.TripFlowViewModel
 
 /**
- * TripActiveFragment - Main screen showing active trip details
- * Displays pickup/drop locations, estimated time, and navigation options
+ * TripActiveFragment - Trip is in progress, driver heading to drop location.
+ * Shows drop contact + address.
+ * "Arrived at Drop Location" button → calls arrivedAtDrop API → navigate to DropArrivalFragment.
  */
 class TripActiveFragment : BaseFragment<FragmentTripActiveBinding>() {
 
-    private val viewModel: TripActiveViewModel by viewModels()
+    private val tripFlowViewModel: TripFlowViewModel by activityViewModels()
+    private val sharedPreference by lazy { SharedPreference.getInstance(requireContext()) }
+
+    // Fallback if GPS is not yet available
+    private val fallbackLat = 12.9200
+    private val fallbackLng = 79.1400
+
+    private fun currentLat() = com.example.logistics_driver_app.data.service.DriverLocationService.lastKnownLocation?.latitude ?: fallbackLat
+    private fun currentLng() = com.example.logistics_driver_app.data.service.DriverLocationService.lastKnownLocation?.longitude ?: fallbackLng
 
     override fun getViewBinding(
         inflater: LayoutInflater,
@@ -33,142 +42,78 @@ class TripActiveFragment : BaseFragment<FragmentTripActiveBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        populateTripInfo()
         setupViews()
         observeViewModel()
+        // Expand bottom sheet so "Arrived at Drop" button is visible by default
+        BottomSheetBehavior.from(binding.bottomSheet).state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+    private fun populateTripInfo() {
+        binding.apply {
+            tvTripStatus.text = "Heading to Drop Location"
+            tvOrderId.text = "#ORD${sharedPreference.getOrderId().toString().takeLast(4)}"
+            tvEstimatedTime.text = "Arriving in ~15 mins"
+            tvDistance.text = "5.5 km away"
+            tvDropAddress.text = sharedPreference.getCurrentDropAddress().ifEmpty { "Drop Location" }
+            tvDropContact.text = sharedPreference.getCurrentCustomerName().ifEmpty { "Customer" }
+            tvPickupAddress.text = sharedPreference.getCurrentPickupAddress().ifEmpty { "Pickup Location" }
+            tvPickupContact.text = sharedPreference.getCurrentCustomerName().ifEmpty { "Customer" }
+            val fare = sharedPreference.getOrderFare()
+            tvAmount.text = if (fare > 0) "₹${"%.0f".format(fare)}" else "₹450"
+            tvPaymentMode.text = "CASH"
+            // Re-label navigation button as "Arrived at Drop Location"
+            btnStartNavigation.text = "Arrived at Drop Location"
+        }
     }
 
     private fun setupViews() {
         binding.apply {
-            // Menu button - shows trip info sheet
             btnMenu.setOnClickListener {
                 findNavController().navigate(R.id.action_tripActive_to_tripInfoSheet)
             }
 
-            // Start Navigation
-            btnStartNavigation.setOnClickListener {
-                viewModel.startNavigation()
-                startGoogleMapsNavigation()
-            }
-
-            // Call Pickup Contact
-            btnCallPickup.setOnClickListener {
-                viewModel.currentTrip.value?.let { trip ->
-                    makePhoneCall(trip.pickupContactPhone)
-                }
-            }
-
-            // Call Drop Contact
             btnCallDrop.setOnClickListener {
-                viewModel.currentTrip.value?.let { trip ->
-                    makePhoneCall(trip.dropContactPhone)
-                }
+                val phone = sharedPreference.getCurrentContactPhone().ifEmpty { "" }
+                if (phone.isNotEmpty()) makePhoneCall(phone)
+            }
+
+            btnCallPickup.setOnClickListener {
+                val phone = sharedPreference.getCurrentContactPhone().ifEmpty { "" }
+                if (phone.isNotEmpty()) makePhoneCall(phone)
+            }
+
+            // "Arrived at Drop" — calls arrivedAtDrop API
+            btnStartNavigation.setOnClickListener {
+                it.isEnabled = false
+                tripFlowViewModel.arrivedAtDrop(currentLat(), currentLng())
             }
         }
     }
 
     private fun observeViewModel() {
-        // Observe current trip
-        viewModel.currentTrip.observe(viewLifecycleOwner, Observer { trip ->
-            trip?.let {
-                updateUI(it)
-            }
-        })
-
-        // Observe trip status changes
-        viewModel.tripStatus.observe(viewLifecycleOwner, Observer { status ->
-            updateTripStatus(status)
-        })
-
-        // Observe navigation started
-        viewModel.navigationStarted.observe(viewLifecycleOwner, Observer { started ->
-            if (started) {
-                Bakery.showToast(requireContext(), getString(R.string.navigation_started))
-            }
-        })
-    }
-
-    private fun updateUI(trip: com.example.logistics_driver_app.data.model.Trip) {
-        binding.apply {
-            // Order ID
-            tvOrderId.text = getString(R.string.order_id_format, trip.orderId)
-
-            // Estimated time
-            tvEstimatedTime.text = getString(R.string.arriving_in, "${trip.estimatedTime} mins")
-
-            // Distance
-            tvDistance.text = getString(R.string.km_away, trip.distance.toString())
-
-            // Pickup details
-            tvPickupAddress.text = trip.pickupAddress
-            tvPickupContact.text = trip.pickupContactName
-
-            // Drop details
-            tvDropAddress.text = trip.dropAddress
-            tvDropContact.text = trip.dropContactName
-
-            // Amount
-            tvAmount.text = getString(R.string.rupee_amount, trip.amount.toString())
-
-            // Payment mode
-            tvPaymentMode.text = if (trip.paymentMode == "CASH") 
-                getString(R.string.cash) else getString(R.string.online)
-        }
-    }
-
-    private fun updateTripStatus(status: TripStatus) {
-        binding.tvTripStatus.text = when (status) {
-            TripStatus.TRIP_ASSIGNED -> getString(R.string.trip_assigned)
-            TripStatus.HEADING_TO_PICKUP -> getString(R.string.heading_to_pickup)
-            TripStatus.ARRIVED_AT_PICKUP -> getString(R.string.arrived_at_pickup)
-            TripStatus.STARTED_TRIP -> getString(R.string.trip_started)
-            TripStatus.HEADING_TO_DROP -> getString(R.string.heading_to_drop)
-            TripStatus.ARRIVED_AT_DROP -> {
-                // Navigate to drop screen
-                findNavController().navigate(R.id.action_tripActive_to_dropArrival)
-                getString(R.string.arrived_at_drop)
-            }
-            TripStatus.TRIP_COMPLETED -> getString(R.string.trip_completed)
-            TripStatus.TRIP_CANCELLED -> getString(R.string.trip_cancelled)
-        }
-
-        // Update button text based on status
-        when (status) {
-            TripStatus.HEADING_TO_DROP -> {
-                binding.btnStartNavigation.text = getString(R.string.start_navigation)
-            }
-            TripStatus.ARRIVED_AT_DROP -> {
-                binding.btnStartNavigation.text = getString(R.string.complete_trip)
-            }
-            else -> {}
-        }
-    }
-
-    private fun startGoogleMapsNavigation() {
-        viewModel.currentTrip.value?.let { trip ->
-            val latitude = trip.pickupLat
-            val longitude = trip.pickupLng
-            
-            // Create navigation intent for Google Maps
-            val uri = Uri.parse("google.navigation:q=$latitude,$longitude")
-            val intent = Intent(Intent.ACTION_VIEW, uri)
-            intent.setPackage("com.google.android.apps.maps")
-            
-            // Check if Google Maps is installed
-            if (intent.resolveActivity(requireActivity().packageManager) != null) {
-                startActivity(intent)
-            } else {
-                // Fallback to browser/map selector
-                val fallbackUri = Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude")
-                startActivity(Intent(Intent.ACTION_VIEW, fallbackUri))
+        tripFlowViewModel.arrivedDropResult.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is TripFlowViewModel.StepResult.Loading -> {
+                    binding.btnStartNavigation.isEnabled = false
+                }
+                is TripFlowViewModel.StepResult.Success -> {
+                    if (isAdded && view != null) {
+                        findNavController().navigate(R.id.action_tripActive_to_dropArrival)
+                    }
+                }
+                is TripFlowViewModel.StepResult.Error -> {
+                    binding.btnStartNavigation.isEnabled = true
+                    Bakery.showToast(requireContext(), result.message)
+                }
+                else -> {}
             }
         }
     }
 
     private fun makePhoneCall(phoneNumber: String) {
-        val intent = Intent(Intent.ACTION_DIAL).apply {
-            data = Uri.parse("tel:$phoneNumber")
-        }
-        startActivity(intent)
+        startActivity(Intent(Intent.ACTION_DIAL).apply { data = Uri.parse("tel:$phoneNumber") })
     }
 }
+
+

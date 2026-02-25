@@ -1,25 +1,27 @@
 package com.example.logistics_driver_app.modules.tripModule.view.fragment
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
-import com.example.logistics_driver_app.Common.util.Bakery
+import com.example.logistics_driver_app.Common.util.SharedPreference
 import com.example.logistics_driver_app.R
 import com.example.logistics_driver_app.databinding.FragmentPaymentCollectionBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
-import com.example.logistics_driver_app.modules.tripModule.viewModel.PaymentViewModel
 
 /**
- * PaymentCollectionFragment - Screen for collecting payment from customer
- * (tp1.png and tp2.png)
+ * PaymentCollectionFragment - Dummy 3-state payment flow.
+ *
+ * State 0: Loading / Calculating fare (2s auto-advance)
+ * State 1: Method select (UPI or Cash)
+ * State 2: Cash confirm → navigate to TripCompletedFragment
  */
 class PaymentCollectionFragment : BaseFragment<FragmentPaymentCollectionBinding>() {
 
-    private val viewModel: PaymentViewModel by viewModels()
+    private val sharedPreference by lazy { SharedPreference.getInstance(requireContext()) }
 
     override fun getViewBinding(
         inflater: LayoutInflater,
@@ -30,51 +32,56 @@ class PaymentCollectionFragment : BaseFragment<FragmentPaymentCollectionBinding>
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupViews()
-        observeViewModel()
+        showLoadingState()
+        // Auto-advance to method select after 2 seconds
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (isAdded && view != null) showMethodState()
+        }, 2000)
     }
 
-    private fun setupViews() {
-        binding.apply {
-            btnBack.setOnClickListener {
-                findNavController().navigateUp()
-            }
+    // ---- states --------------------------------------------------------
 
-            btnConfirmPayment.setOnClickListener {
-                viewModel.currentTrip.value?.let { trip ->
-                    if (trip.paymentMode == "CASH") {
-                        viewModel.confirmCashPayment(trip.amount)
-                    } else {
-                        viewModel.confirmOnlinePayment("ONLINE_TXN_${System.currentTimeMillis()}")
-                    }
-                }
-            }
+    private fun showLoadingState() {
+        binding.loadingSection.visibility = View.VISIBLE
+        binding.methodSection.visibility = View.GONE
+        binding.cashSection.visibility = View.GONE
+    }
+
+    private fun showMethodState() {
+        binding.loadingSection.visibility = View.GONE
+        binding.methodSection.visibility = View.VISIBLE
+        binding.cashSection.visibility = View.GONE
+
+        val fare = sharedPreference.getOrderFare()
+        val fareText = if (fare > 0) "₹${"%.0f".format(fare)}" else "₹450"
+        binding.tvAmount.text = fareText
+        binding.tvOrderId.text = "#ORD${sharedPreference.getOrderId().toString().takeLast(4)}"
+
+        binding.btnPayCash.setOnClickListener { showCashState(fareText) }
+        binding.btnPayUpi.setOnClickListener { showCashState(fareText) }  // UPI → go to tripCompleted directly
+    }
+
+    private fun showCashState(fareText: String) {
+        binding.loadingSection.visibility = View.GONE
+        binding.methodSection.visibility = View.GONE
+        binding.cashSection.visibility = View.VISIBLE
+
+        binding.tvCashAmount.text = "Collect $fareText in Cash"
+
+        binding.btnConfirmCash.setOnClickListener {
+            navigateToCompleted()
+        }
+
+        binding.btnChangeMethod.setOnClickListener {
+            showMethodState()
         }
     }
 
-    private fun observeViewModel() {
-        viewModel.currentTrip.observe(viewLifecycleOwner, Observer { trip ->
-            trip?.let {
-                binding.apply {
-                    tvAmount.text = getString(R.string.rupee_amount, it.amount.toString())
-                    tvOrderId.text = getString(R.string.order_id_format, it.orderId)
-                    tvCustomerName.text = it.dropContactName
-                    tvDistance.text = "${it.distance} km"
-                    
-                    tvPaymentMode.text = if (it.paymentMode == "CASH")
-                        getString(R.string.cash_payment).uppercase()
-                    else
-                        getString(R.string.online_payment).uppercase()
-                }
-            }
-        })
+    // ---- navigation ----------------------------------------------------
 
-        viewModel.paymentConfirmed.observe(viewLifecycleOwner, Observer { confirmed ->
-            if (confirmed) {
-                Bakery.showToast(requireContext(), getString(R.string.payment_collected_message))
-                findNavController().navigateUp()
-            }
-        })
+    private fun navigateToCompleted() {
+        if (isAdded && view != null) {
+            findNavController().navigate(R.id.action_payment_to_tripCompleted)
+        }
     }
 }

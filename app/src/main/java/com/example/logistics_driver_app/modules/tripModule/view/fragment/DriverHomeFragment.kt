@@ -16,6 +16,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.R
@@ -23,6 +24,7 @@ import com.example.logistics_driver_app.data.service.DriverLocationService
 import com.example.logistics_driver_app.databinding.FragmentDriverHomeBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
 import com.example.logistics_driver_app.modules.tripModule.viewModel.DriverHomeViewModel
+import com.example.logistics_driver_app.modules.tripModule.viewModel.TripFlowViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -37,6 +39,7 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
     }
 
     private val viewModel: DriverHomeViewModel by viewModels()
+    private val tripFlowViewModel: TripFlowViewModel by activityViewModels()
     private var isOnline = false
     private var sliderStartX = 0f
     private var sliderMaxX = 0f
@@ -258,6 +261,11 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
             tvTrips.text = summary.todaySummary.trips.toString()
 
             // Update status text
+            // NOTE: isOnline is driven by the local service state (SharedPreference flag
+            // reset on every fresh app launch), NOT by the server's driverStatus.
+            // This prevents the UI from showing ONLINE after a force-kill where the
+            // server still has the driver registered as ONLINE.
+            val locallyOnline = DriverLocationService.isDriverOnline(requireContext())
             when (summary.driverStatus) {
                 "OFFLINE" -> {
                     tvStatus.text = "You are Offline"
@@ -265,14 +273,20 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
                     isOnline = false
                 }
                 "ONLINE" -> {
-                    tvStatus.text = "You are Online"
-                    tvStatus.setTextColor(resources.getColor(R.color.primary, null))
-                    isOnline = true
+                    if (locallyOnline) {
+                        tvStatus.text = "You are Online"
+                        tvStatus.setTextColor(resources.getColor(R.color.primary, null))
+                        isOnline = true
+                    } else {
+                        tvStatus.text = "You are Offline"
+                        tvStatus.setTextColor(resources.getColor(R.color.text_secondary, null))
+                        isOnline = false
+                    }
                 }
                 "ON_TRIP" -> {
                     tvStatus.text = "On Trip"
                     tvStatus.setTextColor(resources.getColor(R.color.primary, null))
-                    isOnline = true
+                    isOnline = locallyOnline
                 }
                 "BLOCKED" -> {
                     tvStatus.text = "Blocked"
@@ -716,6 +730,10 @@ class DriverHomeFragment : BaseFragment<FragmentDriverHomeBinding>() {
                 orderId = orderId,
                 onSuccess = {
                     Log.i(TAG, "[ORDER] ✓ Order #$orderId successfully accepted via API")
+                    // Reset all stale LiveData from the previous trip so fragments
+                    // don't skip past their screens when they re-subscribe.
+                    tripFlowViewModel.resetForNewTrip()
+                    tripFlowViewModel.setOrderId(orderId)
                     // Navigate to pickup arrival screen
                     try {
                         findNavController().navigate(R.id.action_driverHome_to_pickupArrival)

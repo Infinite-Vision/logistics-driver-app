@@ -46,6 +46,14 @@ class DriverLocationService : Service() {
         private const val KEY_IS_ONLINE = "driver_is_online"
         
         /**
+         * Reset online state — call on app start to guarantee OFFLINE on fresh launch.
+         * When the app is force-killed onDestroy() may not run, leaving the flag stale.
+         */
+        fun resetOnlineState(context: Context) {
+            SharedPreference.getInstance(context).putBoolean(KEY_IS_ONLINE, false)
+        }
+
+        /**
          * Check if driver is currently online
          */
         fun isDriverOnline(context: Context): Boolean {
@@ -66,6 +74,14 @@ class DriverLocationService : Service() {
             }
         }
         
+        /**
+         * Last GPS location reported by this service — updated on every location fix.
+         * Fragments use this to get the real device position for API calls.
+         */
+        @Volatile
+        var lastKnownLocation: android.location.Location? = null
+            private set
+
         /**
          * Stop the service and go offline
          */
@@ -95,6 +111,7 @@ class DriverLocationService : Service() {
         override fun onLocationResult(locationResult: LocationResult) {
             locationResult.lastLocation?.let { location ->
                 currentLocation = location
+                lastKnownLocation = location  // expose real GPS for fragments
                 Log.d(TAG, "[LOCATION] Updated: ${location.latitude}, ${location.longitude}")
                 
                 // Send location to WebSocket if connected

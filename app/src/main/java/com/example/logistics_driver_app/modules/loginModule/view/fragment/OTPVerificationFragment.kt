@@ -2,11 +2,15 @@ package com.example.logistics_driver_app.modules.loginModule.view.fragment
 
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.os.Handler
+import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
@@ -59,7 +63,12 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
             btnBack.setOnClickListener {
                 findNavController().navigateUp()
             }
-            
+
+            // Change number — navigate back to phone entry
+            tvChange.setOnClickListener {
+                findNavController().navigateUp()
+            }
+
             // Display phone number
             val maskedNumber = CommonFunctions.maskPhoneNumber(args.phoneNumber)
             tvPhoneNumber.text = maskedNumber
@@ -73,11 +82,25 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
                         if (s?.length == 1 && index < otpEditTexts.size - 1) {
                             otpEditTexts[index + 1].requestFocus()
                         }
+                        // Reset error highlight on typing
+                        editText.setBackgroundResource(R.drawable.bg_otp_box)
                         updateVerifyButton(getOtpFromFields())
                     }
 
                     override fun afterTextChanged(s: Editable?) {}
                 })
+                // Backspace: go to previous field when current is empty
+                editText.setOnKeyListener { _, keyCode, event ->
+                    if (keyCode == KeyEvent.KEYCODE_DEL && event.action == KeyEvent.ACTION_DOWN) {
+                        if (editText.text.isNullOrEmpty() && index > 0) {
+                            otpEditTexts[index - 1].apply {
+                                requestFocus()
+                                setText("")
+                            }
+                            true
+                        } else false
+                    } else false
+                }
             }
             
             // Verify button
@@ -232,7 +255,7 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
         viewModel.errorMessage.observe(viewLifecycleOwner, Observer { errorMsg ->
             errorMsg?.let {
                 Bakery.showToast(requireContext(), it)
-                // TODO: Add shake animation for OTP input fields on error
+                shakeLoginOtpFields()
             }
         })
         
@@ -287,10 +310,9 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
                 android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Verification Progress (24-48 hrs pending)")
                 navigateToVerificationProgress()
             }
-            "HOME", "DASHBOARD" -> {
-                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Home (not implemented)")
-                // TODO: Navigate to main app home/dashboard
-                navigateToOwnerDetails() // Fallback for now
+            "HOME", "DASHBOARD", "APPROVED" -> {
+                android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] -> Home (Driver Dashboard)")
+                navigateToHome()
             }
             else -> {
                 android.util.Log.w("OTPVerificationFragment", "[NAVIGATION] Unknown screen: $nextScreen, defaulting to Owner Details")
@@ -342,7 +364,33 @@ class OTPVerificationFragment : BaseFragment<FragmentOtpVerificationBinding>() {
             android.util.Log.e("OTPVerificationFragment", "Navigation to Verification Progress failed", e)
         }
     }
+
+    private fun navigateToHome() {
+        android.util.Log.d("OTPVerificationFragment", "[NAVIGATION] Navigating to Driver Home")
+        try {
+            val action = OTPVerificationFragmentDirections
+                .actionOtpVerificationToTripHome()
+            findNavController().navigate(action)
+        } catch (e: Exception) {
+            android.util.Log.e("OTPVerificationFragment", "Navigation to Home failed, falling back to verificationProgress", e)
+            navigateToVerificationProgress()
+        }
+    }
     
+    private fun shakeLoginOtpFields() {
+        val shakeAnim = AnimationUtils.loadAnimation(requireContext(), R.anim.shake)
+        val fields = listOf(binding.etOTP1, binding.etOTP2, binding.etOTP3, binding.etOTP4)
+        fields.forEach {
+            it.setBackgroundResource(R.drawable.bg_otp_box_error)
+            it.startAnimation(shakeAnim)
+        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (isAdded && view != null) {
+                fields.forEach { it.setBackgroundResource(R.drawable.bg_otp_box) }
+            }
+        }, 2000)
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         countDownTimer?.cancel()

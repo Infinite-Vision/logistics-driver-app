@@ -33,5 +33,20 @@ sleep 1
 echo "Capturing logs now..."
 echo ""
 
-adb logcat -v time -s DriverWebSocketManager:D LocationTrackingService:D WebSocketMessage:D MainActivity:D DriverHomeFragment:D | tee debug_logs.txt
+adb logcat -v time \
+  LogisticsApp:D \
+  MainActivity:D \
+  VerificationProgress:D \
+  AppStateViewModel:D \
+  OkHttp:D \
+  PhoneViewModel:D \
+  OTPViewModel:D \
+  OTPVerificationFragment:D \
+  DriverWebSocketManager:D \
+  LocationTrackingService:D \
+  DriverHomeFragment:D \
+  AndroidRuntime:E \
+  System.err:E \
+  "*:S" \
+  | tee debug_logs.txt
 

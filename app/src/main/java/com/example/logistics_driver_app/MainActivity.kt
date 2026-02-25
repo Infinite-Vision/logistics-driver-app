@@ -124,17 +124,23 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "[NAVIGATION] hasPhone: $hasPhone")
 
         // Determine start destination based on user state
+        val hasLanguage = sharedPref.isLanguageSet()
         val startDestination = when {
             isLoggedIn && hasToken && hasPhone -> {
-                // User is logged in with valid session - skip onboarding
+                // User is logged in with valid session - call app state to determine exact screen
                 Log.d(TAG, "[NAVIGATION] User session found! Skipping to verification/main screen")
                 Log.d(TAG, "[NAVIGATION] Start destination: VerificationProgressFragment")
                 // TODO: Check app state API to determine exact screen
                 R.id.verificationProgressFragment
             }
+            hasLanguage -> {
+                // Language was selected previously, skip language screen
+                Log.d(TAG, "[NAVIGATION] Language already set, going directly to phone entry")
+                R.id.phoneEntryFragment
+            }
             else -> {
-                // No valid session - start from language selection
-                Log.d(TAG, "[NAVIGATION] No valid session - starting from language selection")
+                // No language set - start from language selection
+                Log.d(TAG, "[NAVIGATION] No language set - starting from language selection")
                 R.id.languageSelectionFragment
             }
         }
@@ -178,7 +184,7 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "[PERSIST_CHECK] ===== CHECKING PERSISTED DATA =====")
         Log.d(TAG, "[PERSIST_CHECK] Is Logged In: ${sharedPref.isLoggedIn()}")
         Log.d(TAG, "[PERSIST_CHECK] Phone Number: ${sharedPref.getPhoneNumber()}")
-        Log.d(TAG, "[PERSIST_CHECK] Session Token: ${sharedPref.getSessionToken()?.take(20)}...")
+        Log.d(TAG, "[PERSIST_CHECK] Session Token: ${sharedPref.getSessionToken()}")
         Log.d(TAG, "[PERSIST_CHECK] Language Code: ${sharedPref.getLanguage()}")
         Log.d(TAG, "[PERSIST_CHECK] Onboarding Completed: ${sharedPref.isOnboardingCompleted()}")
         

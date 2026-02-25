@@ -279,8 +279,18 @@ class OTPViewModel(application: Application) : BaseViewModel(application) {
                             android.util.Log.d("OTPViewModel", "[APP_STATE] _nextScreen LiveData updated to: '$nextScreenValue'")
                             android.util.Log.d("OTPViewModel", "[APP_STATE] Fragment observers should now trigger")
                         } else {
-                            android.util.Log.w("OTPViewModel", "[APP_STATE] WARNING: NextScreen is null/empty!")
-                            android.util.Log.w("OTPViewModel", "[APP_STATE] Fragment fallback should handle this")
+                            // API did not return nextScreen — derive from onboardingStatus
+                            val derivedScreen = when (data.onboardingStatus?.uppercase()) {
+                                "APPROVED" -> "HOME"
+                                "PENDING" -> "VERIFICATION_IN_PROGRESS"
+                                "IN_PROGRESS" -> when (data.driverStatus?.uppercase()) {
+                                    "ACTIVE", "ONLINE", "OFFLINE", "ON_TRIP" -> "HOME"
+                                    else -> "OWNER_DETAILS"
+                                }
+                                else -> "OWNER_DETAILS"
+                            }
+                            android.util.Log.w("OTPViewModel", "[APP_STATE] NextScreen null/empty — derived from onboardingStatus (${data.onboardingStatus}): $derivedScreen")
+                            _nextScreen.value = derivedScreen
                         }
                         
                         // Update preferred language if provided by API (overrides user selection)

@@ -18,7 +18,7 @@ class DriverWebSocketManager private constructor(private val context: Context) {
 
     companion object {
         private const val TAG = "DriverWebSocketManager"
-        private const val WS_BASE_URL = "ws://43.205.235.73:8080"
+        private const val WS_BASE_URL = "wss://f3m8w0mx-8080.inc1.devtunnels.ms"
         private const val WS_DRIVER_PATH = "/ws/driver"
         private const val WS_DRIVER_LOCATION_PATH = "/ws/driver/location"
         private const val NORMAL_CLOSURE_STATUS = 1000

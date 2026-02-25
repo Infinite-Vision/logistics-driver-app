@@ -44,6 +44,13 @@ class SharedPreference private constructor(context: Context) {
         private const val KEY_WILL_DRIVE = "will_drive"
         private const val KEY_DRIVER_PHONE = "driver_phone"
         private const val KEY_LICENSE_URI = "license_uri"
+        private const val KEY_CURRENT_ORDER_ID = "current_order_id"
+        private const val KEY_CURRENT_ORDER_FARE = "current_order_fare"
+        private const val KEY_CURRENT_CUSTOMER_NAME = "current_customer_name"
+        private const val KEY_CURRENT_PICKUP_ADDRESS = "current_pickup_address"
+        private const val KEY_CURRENT_DROP_ADDRESS = "current_drop_address"
+        private const val KEY_CURRENT_CONTACT_PHONE = "current_contact_phone"
+        private const val KEY_CURRENT_DROP_LANDMARK = "current_drop_landmark"
         
         @Volatile
         private var INSTANCE: SharedPreference? = null
@@ -142,6 +149,7 @@ class SharedPreference private constructor(context: Context) {
     
     fun setLanguage(languageCode: String) = putString(KEY_LANGUAGE, languageCode)
     fun getLanguage() = getString(KEY_LANGUAGE, "en")
+    fun isLanguageSet(): Boolean = sharedPreferences.contains(KEY_LANGUAGE)
     
     fun setPhoneNumber(phoneNumber: String) = putString(KEY_PHONE_NUMBER, phoneNumber)
     fun getPhoneNumber() = getString(KEY_PHONE_NUMBER)
@@ -202,6 +210,29 @@ class SharedPreference private constructor(context: Context) {
     
     fun saveLicenseUri(uri: String) = putString(KEY_LICENSE_URI, uri)
     fun getLicenseUri() = getString(KEY_LICENSE_URI)
+
+    // ---- Active Trip ----
+    fun saveOrderId(orderId: Long) = sharedPreferences.edit().putLong(KEY_CURRENT_ORDER_ID, orderId).apply()
+    fun getOrderId(): Long = sharedPreferences.getLong(KEY_CURRENT_ORDER_ID, -1L)
+    fun clearOrderId() = sharedPreferences.edit().remove(KEY_CURRENT_ORDER_ID).apply()
+
+    fun saveOrderFare(fare: Double) = sharedPreferences.edit().putFloat(KEY_CURRENT_ORDER_FARE, fare.toFloat()).apply()
+    fun getOrderFare(): Double = sharedPreferences.getFloat(KEY_CURRENT_ORDER_FARE, 0f).toDouble()
+
+    fun saveCurrentCustomerName(name: String) = putString(KEY_CURRENT_CUSTOMER_NAME, name)
+    fun getCurrentCustomerName(): String = getString(KEY_CURRENT_CUSTOMER_NAME) ?: ""
+
+    fun saveCurrentPickupAddress(addr: String) = putString(KEY_CURRENT_PICKUP_ADDRESS, addr)
+    fun getCurrentPickupAddress(): String = getString(KEY_CURRENT_PICKUP_ADDRESS) ?: ""
+
+    fun saveCurrentDropAddress(addr: String) = putString(KEY_CURRENT_DROP_ADDRESS, addr)
+    fun getCurrentDropAddress(): String = getString(KEY_CURRENT_DROP_ADDRESS) ?: ""
+
+    fun saveCurrentContactPhone(phone: String) = putString(KEY_CURRENT_CONTACT_PHONE, phone)
+    fun getCurrentContactPhone(): String = getString(KEY_CURRENT_CONTACT_PHONE) ?: ""
+
+    fun saveCurrentDropLandmark(landmark: String) = putString(KEY_CURRENT_DROP_LANDMARK, landmark)
+    fun getCurrentDropLandmark(): String = getString(KEY_CURRENT_DROP_LANDMARK) ?: ""
     
     /**
      * Clear all preferences.

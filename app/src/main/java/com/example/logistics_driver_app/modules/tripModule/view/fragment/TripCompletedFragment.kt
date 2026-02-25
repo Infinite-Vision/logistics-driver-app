@@ -4,20 +4,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.Observer
 import androidx.navigation.fragment.findNavController
 import com.example.logistics_driver_app.R
+import com.example.logistics_driver_app.Common.util.SharedPreference
+import com.example.logistics_driver_app.data.service.DriverLocationService
 import com.example.logistics_driver_app.databinding.FragmentTripCompletedBinding
 import com.example.logistics_driver_app.modules.loginModule.base.BaseFragment
-import com.example.logistics_driver_app.modules.tripModule.viewModel.TripActiveViewModel
 
 /**
- * TripCompletedFragment - Shows trip completion summary
+ * TripCompletedFragment - Shows rating screen then completion summary
  */
 class TripCompletedFragment : BaseFragment<FragmentTripCompletedBinding>() {
 
-    private val viewModel: TripActiveViewModel by viewModels()
+    private val sharedPreference by lazy { SharedPreference.getInstance(requireContext()) }
 
     override fun getViewBinding(
         inflater: LayoutInflater,
@@ -28,36 +27,31 @@ class TripCompletedFragment : BaseFragment<FragmentTripCompletedBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        setupViews()
-        observeViewModel()
+        showRatingState()
     }
 
-    private fun setupViews() {
-        binding.apply {
-            btnViewEarnings.setOnClickListener {
-                // Navigate to earnings screen
-                findNavController().navigate(R.id.action_tripCompleted_to_menu)
-            }
+    private fun showRatingState() {
+        binding.ratingSection.visibility = View.VISIBLE
+        binding.completedSection.visibility = View.GONE
 
-            btnDone.setOnClickListener {
-                // Navigate back to driver home
-                findNavController().navigate(R.id.action_tripCompleted_to_driverHome)
-            }
+        binding.btnSubmitRating.setOnClickListener {
+            showCompletedState()
         }
     }
 
-    private fun observeViewModel() {
-        viewModel.currentTrip.observe(viewLifecycleOwner, Observer { trip ->
-            trip?.let {
-                binding.apply {
-                    tvOrderId.text = getString(R.string.order_id_format, it.orderId)
-                    tvDistance.text = "${it.distance} km"
-                    tvAmount.text = getString(R.string.rupee_amount, it.amount.toString())
-                    tvPaymentMode.text = if (it.paymentMode == "CASH")
-                        getString(R.string.cash) else getString(R.string.online)
-                }
-            }
-        })
+    private fun showCompletedState() {
+        binding.ratingSection.visibility = View.GONE
+        binding.completedSection.visibility = View.VISIBLE
+
+        val fare = sharedPreference.getOrderFare()
+        binding.tvEarnedAmount.text = "You earned ₹${"%.0f".format(fare)}"
+
+        binding.btnDone.setOnClickListener {
+            // Clear trip data
+            sharedPreference.clearOrderId()
+            // Restart location service so driver is back ONLINE and ready for next order
+            DriverLocationService.startService(requireContext())
+            findNavController().navigate(R.id.action_tripCompleted_to_driverHome)
+        }
     }
 }

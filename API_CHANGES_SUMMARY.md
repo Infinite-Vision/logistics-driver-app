@@ -221,7 +221,7 @@ _errorMessage.value = response.body()?.message
 
 ✅ **Fully Compatible with Backend Specification v1**
 
-- Base URL: `http://43.205.235.73:8080/api/v1/`
+- Base URL: `http://f3m8w0mx-8080.inc1.devtunnels.ms/api/vi/`
 - All 12 endpoints implemented
 - Request/Response DTOs match exactly
 - Enum values match (uppercase: EN, TA, HI, TRUCK, etc.)

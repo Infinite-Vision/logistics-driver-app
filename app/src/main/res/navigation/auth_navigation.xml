@@ -89,6 +89,14 @@
             app:popExitAnim="@android:anim/slide_out_right"
             app:popUpTo="@id/languageSelectionFragment"
             app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_otpVerification_to_tripHome"
+            app:destination="@id/trip_navigation"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/languageSelectionFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- Owner Details Fragment (Step 1) -->
@@ -165,13 +173,37 @@
         android:name="com.example.logistics_driver_app.modules.loginModule.view.fragment.VerificationProgressFragment"
         android:label="Verification in Progress"
         tools:layout="@layout/fragment_verification_progress">
-        
+
         <action
             android:id="@+id/action_verificationProgress_to_tripHome"
             app:destination="@id/trip_navigation"
             app:enterAnim="@anim/slide_in_right"
             app:exitAnim="@anim/slide_out_left"
             app:popUpTo="@id/auth_navigation"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_verificationProgress_to_ownerDetails"
+            app:destination="@id/ownerDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/verificationProgressFragment"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_verificationProgress_to_vehicleDetails"
+            app:destination="@id/vehicleDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/verificationProgressFragment"
+            app:popUpToInclusive="true" />
+
+        <action
+            android:id="@+id/action_verificationProgress_to_driverDetails"
+            app:destination="@id/driverDetailsFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popUpTo="@id/verificationProgressFragment"
             app:popUpToInclusive="true" />
     </fragment>
 

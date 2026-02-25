@@ -7,11 +7,11 @@ package com.example.logistics_driver_app.Common.util
 object Constants {
     
     // API Configuration
-    const val BASE_URL = "http://43.205.235.73:8080/api/v1/"
+    const val BASE_URL = "https://f3m8w0mx-8080.inc1.devtunnels.ms/api/v1/"
     const val API_TIMEOUT = 30L // seconds
     
     // WebSocket Configuration
-    const val WS_BASE_URL = "ws://43.205.235.73:8080"
+    const val WS_BASE_URL = "wss://f3m8w0mx-8080.inc1.devtunnels.ms"
     const val WS_DRIVER_PATH = "/ws/driver"
     const val WS_DRIVER_LOCATION_PATH = "/ws/driver/location"
     const val LOCATION_UPDATE_INTERVAL = 30L // seconds

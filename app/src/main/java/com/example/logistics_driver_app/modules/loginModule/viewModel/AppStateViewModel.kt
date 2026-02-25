@@ -87,7 +87,18 @@ class AppStateViewModel(application: Application) : BaseViewModel(application) {
                             _nextScreen.value = nextScreenValue
                             Log.d(TAG, "[API] nextScreen posted to observers")
                         } else {
-                            Log.w(TAG, "[API] nextScreen is null or empty, not posting")
+                            // API did not return nextScreen — derive from onboardingStatus
+                            val derived = when (data.onboardingStatus?.uppercase()) {
+                                "APPROVED" -> "HOME"
+                                "PENDING" -> "VERIFICATION_IN_PROGRESS"
+                                "IN_PROGRESS" -> when (data.driverStatus?.uppercase()) {
+                                    "ACTIVE", "ONLINE", "OFFLINE", "ON_TRIP" -> "HOME"
+                                    else -> "owner_details"
+                                }
+                                else -> "owner_details"
+                            }
+                            Log.w(TAG, "[API] nextScreen null/empty — derived '$derived' from onboardingStatus (${data.onboardingStatus})")
+                            _nextScreen.value = derived
                         }
                         
                         _onboardingStatus.value = data.onboardingStatus ?: ""

@@ -9,7 +9,7 @@ Getting "Network error. Please check your connection." when clicking Login butto
 **THE MAIN ISSUE**: Android 9+ blocks HTTP traffic by default for security. Your backend API uses HTTP (not HTTPS), so all network requests were being blocked silently.
 
 **What was happening**: 
-- App tried to make HTTP request to `http://43.205.235.73:8080/api/v1/auth/otp/verify`
+- App tried to make HTTP request to `http://f3m8w0mx-8080.inc1.devtunnels.ms/api/vi/auth/otp/verify`
 - Android OS blocked the request immediately
 - IOException was thrown with network error message
 - No actual network request was made
@@ -154,7 +154,7 @@ This is more secure as it only allows HTTP for your specific backend IP.
 
 ### Request OTP
 ```
-POST http://43.205.235.73:8080/api/v1/auth/otp/request
+POST http://f3m8w0mx-8080.inc1.devtunnels.ms/api/vi/auth/otp/request
 Body: {
   "countryCode": "+91",
   "phoneNumber": "9876543210"
@@ -163,7 +163,7 @@ Body: {
 
 ### Verify OTP
 ```
-POST http://43.205.235.73:8080/api/v1/auth/otp/verify
+POST http://f3m8w0mx-8080.inc1.devtunnels.ms/api/vi/auth/otp/verify
 Body: {
   "countryCode": "+91",
   "phoneNumber": "9876543210",
@@ -178,7 +178,7 @@ Body: {
 
 1. **Check backend is running**:
    ```bash
-   curl http://43.205.235.73:8080/api/v1/auth/otp/request
+   curl http://f3m8w0mx-8080.inc1.devtunnels.ms/api/vi/auth/otp/request
    ```
 
 2. **Check device internet**:
